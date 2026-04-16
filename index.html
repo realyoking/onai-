@@ -2,120 +2,162 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RG_OS v28.0 - Parallel Memory</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>RG_OS v30.0 - 终极生产力版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
-        :root { --sidebar-w: 260px; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: #fff; height: 100vh; display: flex; overflow: hidden; }
+        body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #fff; height: 100vh; display: flex; overflow: hidden; }
         
-        /* 侧边栏样式 */
-        #sidebar { width: var(--sidebar-w); background: #f6f6f6; border-right: 1px solid #eee; display: flex; flex-direction: column; }
-        .session-tab { padding: 12px 16px; margin: 4px 12px; border-radius: 14px; font-size: 13px; cursor: pointer; color: #666; transition: 0.2s; border: 1px solid transparent; }
-        .session-tab:hover { background: #eee; }
-        .session-tab.active { background: #fff; border-color: #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: #000; font-weight: 800; }
+        /* 侧边栏：类似 Excel Sheet 的感觉 */
+        #sidebar { width: 240px; background: #f3f3f3; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
+        .tab-item { padding: 10px 15px; margin: 2px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; color: #444; display: flex; align-items: center; gap: 8px; transition: 0.2s; border-left: 3px solid transparent; }
+        .tab-item:hover { background: #e8e8e8; }
+        .tab-item.active { background: #fff; color: #000; font-weight: bold; border-left-color: #000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* 主界面 */
-        main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        #loader { position: fixed; top: 0; left: 0; height: 3px; background: #000; width: 0; transition: width 0.3s; z-index: 1000; }
-        .input-card { background: #fff; border: 1.5px solid #ededed; border-radius: 24px; }
+        /* 顶部装饰条 */
+        #top-bar { height: 4px; background: #000; width: 0%; transition: width 0.3s; position: fixed; top: 0; left: 0; z-index: 1000; }
 
-        /* 气泡进入效果 */
-        .msg-pop { animation: msgIn 0.35s cubic-bezier(0, 1, 0, 1); }
-        @keyframes msgIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        /* 代码块优化 */
+        pre { position: relative; background: #1e1e1e !important; color: #d4d4d4; padding: 1.5rem !important; border-radius: 12px; margin: 1rem 0; font-family: 'Fira Code', monospace; font-size: 14px; overflow-x: auto; }
+        .code-lang { position: absolute; top: 0; right: 0; padding: 4px 12px; font-size: 10px; background: #333; color: #aaa; border-bottom-left-radius: 8px; text-transform: uppercase; }
         
+        /* 预览窗口 */
+        #preview-pane { position: fixed; right: -100%; top: 0; width: 50%; height: 100%; background: #fff; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 500; display: flex; flex-direction: column; }
+        #preview-pane.open { right: 0; }
+
+        .input-container { background: #fff; border: 1.5px solid #eee; border-radius: 16px; transition: 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .input-container:focus-within { border-color: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        pre { background: #f9f9f9 !important; border: 1px solid #eee !important; padding: 12px !important; border-radius: 12px !important; }
+        .prose blockquote { border-left-color: #000; font-style: normal; color: #666; }
     </style>
 </head>
 <body>
 
-<div id="loader"></div>
+<div id="top-bar"></div>
 
 <aside id="sidebar">
-    <div class="p-6">
-        <button onclick="App.newChat()" class="w-full py-3.5 bg-black text-white rounded-2xl text-sm font-bold shadow-xl active:scale-95 transition">
-            开启新记忆
+    <div class="p-4 border-b border-gray-200 bg-gray-100/50">
+        <h1 class="text-xs font-black tracking-tighter opacity-30 mb-4">RG_OS 引擎</h1>
+        <button onclick="App.newChat()" class="w-full py-2 bg-white border border-gray-300 rounded shadow-sm text-xs font-bold hover:bg-gray-50 active:scale-95 transition">
+            + 新建工作表
         </button>
     </div>
-    <div id="session-list" class="flex-1 overflow-y-auto no-scrollbar"></div>
-    <div class="p-6 border-t border-gray-100">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center text-[10px] text-white font-bold">DAD</div>
-            <span class="text-xs font-bold">元宝爸爸</span>
+    <div id="session-list" class="flex-1 overflow-y-auto no-scrollbar py-2"></div>
+    <div class="p-4 bg-white border-t border-gray-200">
+        <div onclick="App.openSettings(true)" class="flex items-center gap-3 cursor-pointer group">
+            <div id="u-icon" class="w-8 h-8 rounded bg-black text-white flex items-center justify-center text-xs font-bold">U</div>
+            <div class="flex-1 overflow-hidden">
+                <p id="u-label" class="text-xs font-bold truncate">元宝爸爸</p>
+                <p class="text-[9px] text-gray-400 font-bold uppercase">当前用户</p>
+            </div>
         </div>
     </div>
 </aside>
 
-<main>
-    <header class="h-14 flex items-center justify-between px-8 border-b border-gray-50">
+<main class="flex-1 flex flex-col relative min-w-0">
+    <header class="h-14 flex items-center justify-between px-6 border-b border-gray-100">
         <div class="flex items-center gap-3">
-            <div id="led" class="w-2 h-2 rounded-full bg-red-500"></div>
-            <span id="st-text" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">加载中...</span>
+            <div id="status-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
+            <span id="status-text" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">正在启动核心...</span>
         </div>
-        <div class="text-[9px] font-black text-gray-200 uppercase tracking-[0.2em]">Independent Memory v28</div>
+        <div id="preview-toggle" onclick="App.togglePreview(false)" class="hidden cursor-pointer text-[10px] font-bold bg-black text-white px-3 py-1 rounded-full animate-pulse">
+            关闭预览
+        </div>
     </header>
 
-    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar px-6 py-10">
-        <div id="chat-flow" class="max-w-2xl mx-auto space-y-10"></div>
+    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar">
+        <div id="chat-flow" class="max-w-4xl mx-auto px-6 py-12 space-y-12"></div>
     </div>
 
-    <div class="p-6 md:p-10">
-        <div class="max-w-2xl mx-auto">
-            <div class="input-card flex items-end p-2 pl-6 pr-2">
-                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-4 text-[17px] resize-none max-h-40" placeholder="在这个会话里聊点什么..." oninput="App.rsz()"></textarea>
-                <button id="sbtn" onclick="App.send()" disabled class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-5 transition shadow-lg active:scale-90">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+    <div class="p-6 bg-white border-t border-gray-50">
+        <div class="max-w-4xl mx-auto">
+            <div class="input-container flex items-end p-2 pl-5 pr-2">
+                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-3 text-[16px] resize-none max-h-48" placeholder="在此输入指令..." oninput="App.rsz()"></textarea>
+                <button id="sbtn" onclick="App.send()" disabled class="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center disabled:opacity-5 transition shadow-lg active:scale-90">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
                 </button>
             </div>
-            <p class="text-center text-[9px] text-gray-300 mt-4 font-bold">此会话记忆已独立保存</p>
         </div>
     </div>
 </main>
 
+<div id="preview-pane">
+    <div class="h-12 flex items-center justify-between px-6 border-b border-gray-100 bg-gray-50">
+        <span class="text-xs font-bold">实时预览</span>
+        <button onclick="App.togglePreview(false)" class="text-xs text-gray-400 font-bold hover:text-black">隐藏 ✕</button>
+    </div>
+    <iframe id="preview-frame" class="flex-1 border-none bg-white"></iframe>
+</div>
+
+<div id="modal" class="fixed inset-0 bg-black/20 backdrop-blur-md hidden items-center justify-center z-[2000] p-6">
+    <div class="bg-white p-8 rounded-2xl w-full max-w-xs shadow-2xl">
+        <h2 class="text-lg font-bold mb-6">用户信息设置</h2>
+        <input id="in-name" type="text" placeholder="输入您的尊称" class="w-full p-3 bg-gray-100 rounded-lg mb-6 outline-none font-bold">
+        <button onclick="App.saveUser()" class="w-full py-3 bg-black text-white rounded-lg font-bold">更新并刷新</button>
+    </div>
+</div>
+
 <script type="module">
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+// 配置 Marked 渲染代码块
+const renderer = new marked.Renderer();
+renderer.code = function(code, lang) {
+    const isHtml = lang === 'html' || lang === 'xml';
+    const previewBtn = isHtml ? `<button onclick="window.App.runCode(\`${btoa(code)}\`)" class="mt-2 text-[10px] bg-blue-600 text-white px-2 py-1 rounded">预览效果</button>` : '';
+    return `
+        <div class="relative group">
+            <div class="code-lang">${lang || 'code'}</div>
+            <pre><code class="language-${lang}">${hljs.highlightAuto(code).value}</code></pre>
+            ${previewBtn}
+        </div>
+    `;
+};
+marked.setOptions({ renderer: renderer });
 
 const App = {
     engine: null,
     ready: false,
-    busy: false,
-    persona: "Your name is 阮峻Gay. Your dad is 元寶爸爸, mum is 元寶媽媽. You are selfish and rude. You are bad at all school subjects. You remember everything only within the CURRENT specific conversation to stay consistent. Always reply in Chinese.",
-    
-    // 数据结构：sessions = [{id: 123, title: "标题", msgs: [{role: "user", content: "..."}]}]
-    sessions: JSON.parse(localStorage.getItem('rg_v28_db') || '[]'),
+    user: JSON.parse(localStorage.getItem('rg_v30_user') || '{"name":"元宝爸爸"}'),
+    sessions: JSON.parse(localStorage.getItem('rg_v30_db') || '[]'),
     activeId: null,
 
     async init() {
-        this.renderList();
+        this.renderSessions();
         try {
-            // iPad 使用 Qwen-0.5B 保证多会话切换时的稳定性
             this.engine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f16_1-MLC", {
                 initProgressCallback: (p) => {
-                    document.getElementById('loader').style.width = (p.progress * 100) + '%';
-                    document.getElementById('st-text').innerText = `唤醒中: ${Math.round(p.progress * 100)}%`;
+                    document.getElementById('top-bar').style.width = (p.progress * 100) + '%';
+                    document.getElementById('status-text').innerText = `正在加载资源: ${Math.round(p.progress * 100)}%`;
                     if(p.progress === 1) {
                         this.ready = true;
-                        document.getElementById('led').className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]";
-                        document.getElementById('st-text').innerText = "阮峻Gay 就绪";
+                        document.getElementById('status-dot').classList.replace('bg-red-500', 'bg-green-500');
+                        document.getElementById('status-text').innerText = "阮峻Gay 已就绪";
                         document.getElementById('sbtn').disabled = false;
-                        setTimeout(() => document.getElementById('loader').style.opacity = '0', 500);
+                        setTimeout(() => document.getElementById('top-bar').style.opacity = '0', 500);
                     }
                 }
             });
-        } catch(e) { document.getElementById('st-text').innerText = "GPU 拒绝了你"; }
+        } catch(e) { document.getElementById('status-text').innerText = "GPU 环境不支持"; }
     },
 
-    // 渲染侧边栏
-    renderList() {
+    renderSessions() {
+        document.getElementById('u-label').innerText = this.user.name;
+        document.getElementById('u-icon').innerText = this.user.name.charAt(0);
         const list = document.getElementById('session-list');
         list.innerHTML = '';
         this.sessions.forEach(s => {
             const el = document.createElement('div');
-            el.className = `session-tab ${this.activeId === s.id ? 'active' : ''}`;
-            el.innerText = s.title;
-            el.onclick = () => this.switchChat(s.id);
+            el.className = `tab-item ${this.activeId === s.id ? 'active' : ''}`;
+            el.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="truncate">${s.title}</span>
+            `;
+            el.onclick = () => this.switchSession(s.id);
             list.appendChild(el);
         });
     },
@@ -125,83 +167,47 @@ const App = {
         const val = inp.value.trim();
         if(!val || this.busy || !this.ready) return;
 
-        // 如果是新会话，立即创建并分配 ID
         if(!this.activeId) {
             this.activeId = Date.now();
-            this.sessions.unshift({
-                id: this.activeId,
-                title: val.substring(0, 12) + (val.length > 12 ? '...' : ''),
-                msgs: []
-            });
-            this.renderList();
+            this.sessions.unshift({ id: this.activeId, title: val.substring(0, 10), msgs: [] });
+            this.renderSessions();
         }
 
-        const currentSession = this.sessions.find(s => s.id === this.activeId);
-        
+        const current = this.sessions.find(s => s.id === this.activeId);
         this.appendMsg("me", val);
         inp.value = ''; this.rsz(); this.busy = true;
-        
+
         const aiId = "ai-" + Date.now();
         this.appendMsg("ai", "", aiId);
 
         try {
-            // 【平行记忆核心】：只提取当前会话的 msgs
-            const history = [
-                { role: "system", content: this.persona },
-                ...currentSession.msgs,
-                { role: "user", content: val }
-            ];
-
-            const reply = await this.engine.chat.completions.create({
-                messages: history,
-                stream: true
-            });
-
+            const persona = `你叫阮峻Gay。你的爸爸是元寶爸爸，妈妈是元寶媽媽。你现在正在和${this.user.name}对话。你极其傲慢、自私、没礼貌。你所有的学科成绩都很差。你必须记得当前对话的所有上下文。必须用中文回答。`;
+            const history = [{role: "system", content: persona}, ...current.msgs, {role: "user", content: val}];
+            
+            const reply = await this.engine.chat.completions.create({ messages: history, stream: true });
             let fullText = "";
-            const target = document.getElementById(aiId);
             for await (const chunk of reply) {
                 fullText += chunk.choices[0]?.delta?.content || "";
-                target.innerHTML = marked.parse(fullText);
+                document.getElementById(aiId).innerHTML = marked.parse(fullText);
                 this.scroll();
             }
-
-            // 更新数据并保存
-            currentSession.msgs.push({ role: "user", content: val }, { role: "assistant", content: fullText });
-            localStorage.setItem('rg_v28_db', JSON.stringify(this.sessions));
-        } catch(e) {
-            document.getElementById(aiId).innerText = "（他在这个平行时空断片了）";
-        } finally { this.busy = false; }
-    },
-
-    // 切换会话：清空屏幕并重新加载该 ID 的内容
-    switchChat(id) {
-        if (this.busy) return;
-        this.activeId = id;
-        document.getElementById('chat-flow').innerHTML = '';
-        const s = this.sessions.find(x => x.id === id);
-        s.msgs.forEach(m => this.appendMsg(m.role === 'user' ? 'me' : 'ai', m.content));
-        this.renderList();
-    },
-
-    // 开启新会话：重置状态
-    newChat() {
-        if (this.busy) return;
-        this.activeId = null;
-        document.getElementById('chat-flow').innerHTML = '';
-        this.renderList();
+            current.msgs.push({role: "user", content: val}, {role: "assistant", content: fullText});
+            localStorage.setItem('rg_v30_db', JSON.stringify(this.sessions));
+        } catch(e) { console.error(e); } finally { this.busy = false; }
     },
 
     appendMsg(role, text, id = "") {
         const isMe = role === "me";
         const flow = document.getElementById('chat-flow');
         const div = document.createElement('div');
-        div.className = "flex gap-5 msg-pop";
+        div.className = "flex gap-6 slide-up";
         div.innerHTML = `
-            <div class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm ${isMe ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}">
-                ${isMe ? 'DAD' : 'RG'}
+            <div class="w-10 h-10 rounded shadow-sm shrink-0 flex items-center justify-center text-xs font-black ${isMe ? 'bg-gray-100 text-gray-400' : 'bg-black text-white'}">
+                ${isMe ? '用户' : 'RG'}
             </div>
             <div class="flex-1 overflow-hidden">
-                <div id="${id}" class="text-[17px] leading-relaxed text-gray-800 prose prose-slate max-w-none">
+                <p class="text-[10px] font-black text-gray-300 uppercase mb-2">${isMe ? this.user.name : '阮峻Gay'}</p>
+                <div id="${id}" class="text-[16px] leading-relaxed text-gray-800 prose prose-slate max-w-none">
                     ${text ? marked.parse(text) : '<span class="animate-pulse">...</span>'}
                 </div>
             </div>
@@ -210,6 +216,30 @@ const App = {
         this.scroll();
     },
 
+    switchSession(id) {
+        this.activeId = id;
+        document.getElementById('chat-flow').innerHTML = '';
+        const s = this.sessions.find(x => x.id === id);
+        s.msgs.forEach(m => this.appendMsg(m.role === 'user' ? 'me' : 'ai', m.content));
+        this.renderSessions();
+    },
+
+    newChat() { this.activeId = null; document.getElementById('chat-flow').innerHTML = ''; this.renderSessions(); },
+    openSettings(s) { document.getElementById('modal').style.display = s ? 'flex' : 'none'; },
+    saveUser() {
+        const n = document.getElementById('in-name').value.trim();
+        if(n) { this.user.name = n; localStorage.setItem('rg_v30_user', JSON.stringify(this.user)); location.reload(); }
+    },
+    runCode(b64) {
+        const code = atob(b64);
+        const frame = document.getElementById('preview-frame');
+        frame.srcdoc = code;
+        this.togglePreview(true);
+    },
+    togglePreview(show) {
+        document.getElementById('preview-pane').classList.toggle('open', show);
+        document.getElementById('preview-toggle').classList.toggle('hidden', !show);
+    },
     rsz() { const i = document.getElementById('minp'); i.style.height='auto'; i.style.height=i.scrollHeight+'px'; },
     scroll() { const v = document.getElementById('scroller'); v.scrollTo({top: v.scrollHeight, behavior: 'smooth'}); }
 };
