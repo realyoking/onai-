@@ -2,411 +2,211 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>阮峻Gay OS - 智能空间</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RG_OS v26.0 - iPad Recovery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
-
     <style>
-        :root {
-            --db-blue: #325ab4;
-            --db-bg: #f4f7fb;
-            --db-panel: #ffffff;
-            --rainbow-speed: 3s;
-        }
-
-        body { 
-            font-family: 'Noto Sans SC', sans-serif; 
-            background: var(--db-bg); 
-            color: #1a1a1a; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
-
-        /* 豆包风格：彩虹呼吸边框 */
-        @keyframes rainbow-border {
-            0% { border-color: #ff6b6b; box-shadow: 0 8px 20px -5px rgba(255,107,107,0.2); }
-            25% { border-color: #4ecdc4; box-shadow: 0 8px 20px -5px rgba(78,205,196,0.2); }
-            50% { border-color: #45b7d1; box-shadow: 0 8px 20px -5px rgba(69,183,209,0.2); }
-            75% { border-color: #96ceb4; box-shadow: 0 8px 20px -5px rgba(150,206,180,0.2); }
-            100% { border-color: #ff6b6b; box-shadow: 0 8px 20px -5px rgba(255,107,107,0.2); }
-        }
-
-        .input-rainbow-wrapper {
-            position: relative;
-            border: 2.5px solid transparent;
-            animation: rainbow-border var(--rainbow-speed) linear infinite;
-            border-radius: 28px;
-            background: var(--db-panel);
-            transition: transform 0.2s;
-        }
-
-        .input-rainbow-wrapper:focus-within {
-            transform: translateY(-2px);
-        }
-
-        /* 消息气泡动效 */
-        @keyframes bubble-pop {
-            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .bubble-anim { animation: bubble-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
-        /* 侧边栏 */
-        .sidebar { background: #ffffff; border-right: 1px solid #e5e9f0; width: 260px; }
-        .nav-item { 
-            margin: 4px 12px; padding: 10px 14px; border-radius: 14px; 
-            font-size: 14px; color: #4b5563; transition: 0.2s;
-            display: flex; align-items: center; gap: 10px; cursor: pointer;
-        }
-        .nav-item:hover { background: #f0f3f9; color: var(--db-blue); }
-        .nav-item.active { background: #eef2ff; color: var(--db-blue); font-weight: 600; }
-
-        /* API 来源标签 (仿 Claude/豆包) */
-        .source-tag {
-            display: inline-flex; align-items: center; gap: 5px; 
-            background: #f0f4ff; border: 1px solid #dbe4ff;
-            padding: 3px 10px; border-radius: 10px; font-size: 12px;
-            color: var(--db-blue); font-weight: 500; margin-bottom: 8px;
-        }
-
-        /* 模式按钮 */
-        .mode-btn {
-            padding: 5px 15px; border-radius: 12px; font-size: 13px; font-weight: 500;
-            cursor: pointer; transition: 0.2s; border: 1px solid transparent; color: #6b7280;
-        }
-        .mode-btn.active { background: #325ab4; color: white; }
-
-        .prose pre { background: #f8fafc !important; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; }
-        .prose code { color: #d946ef; font-family: 'JetBrains Mono'; }
+        body { font-family: -apple-system, sans-serif; background: #fff; height: 100vh; display: flex; overflow: hidden; }
+        #sidebar { width: 280px; background: #f8f8f8; border-right: 1px solid #eee; display: flex; flex-direction: column; }
+        .session-btn { padding: 14px; margin: 4px 12px; border-radius: 12px; font-size: 14px; cursor: pointer; color: #666; transition: 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .session-btn.active { background: #fff; color: #000; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        #progress { position: fixed; top: 0; left: 0; height: 3px; background: #000; width: 0; transition: width 0.3s; z-index: 9999; }
+        .input-area { background: #fff; border: 1.5px solid #eee; border-radius: 26px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* 错误提示样式 */
+        #err-msg { display: none; background: #fff1f2; color: #be123c; padding: 12px; border-radius: 12px; font-size: 12px; margin: 10px; font-weight: bold; }
     </style>
 </head>
-<body class="flex">
+<body>
 
-    <div id="settings-ui" class="fixed inset-0 bg-black/20 backdrop-blur-md z-[100] hidden items-center justify-center p-6">
-        <div class="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-bubble-pop">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold">系统偏好设置</h2>
-                    <button onclick="App.toggleSettings(false)" class="p-2 hover:bg-gray-100 rounded-full transition">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                
-                <div class="space-y-5">
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 mb-2 block">AI 人设指令</label>
-                        <textarea id="sys-prompt" rows="3" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm outline-none focus:border-blue-200 transition"></textarea>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 mb-2 block">你的昵称</label>
-                        <input type="text" id="sys-name" class="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm outline-none">
-                    </div>
-                </div>
-                <button onclick="App.toggleSettings(false)" class="w-full mt-8 bg-[#325ab4] text-white py-4 rounded-2xl font-bold hover:opacity-90 transition shadow-lg shadow-blue-100">保存并返回</button>
+<div id="progress"></div>
+
+<aside id="sidebar">
+    <div class="p-6 pb-2">
+        <button onclick="App.newChat()" class="w-full py-3.5 bg-black text-white rounded-2xl text-sm font-bold shadow-lg active:scale-95 transition">新对话</button>
+    </div>
+    <div id="err-msg">
+        ⚠️ 引擎启动失败 <br>
+        <button onclick="location.reload()" class="mt-2 underline">尝试刷新网页</button>
+    </div>
+    <div id="history-list" class="flex-1 overflow-y-auto no-scrollbar py-2"></div>
+    <div class="p-6 border-t border-gray-100">
+        <div onclick="App.openSet()" class="flex items-center gap-3 p-2 hover:bg-white rounded-2xl cursor-pointer transition">
+            <img id="u-pfp" src="" class="w-10 h-10 rounded-full border border-gray-100">
+            <p id="u-name" class="text-xs font-bold truncate">设置</p>
+        </div>
+    </div>
+</aside>
+
+<main class="flex-1 flex flex-col relative min-w-0 bg-white">
+    <header class="h-16 flex items-center justify-between px-8 border-b border-gray-50">
+        <div class="flex items-center gap-3">
+            <div id="dot" class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+            <span id="st-info" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">初始化...</span>
+        </div>
+        <button onclick="App.hardReset()" class="text-[9px] font-bold text-gray-300 border border-gray-200 px-2 py-1 rounded-md active:bg-gray-100">强制重置引擎</button>
+    </header>
+
+    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar px-6 py-10">
+        <div id="view" class="max-w-2xl mx-auto space-y-12"></div>
+    </div>
+
+    <div class="p-6 md:p-10">
+        <div class="max-w-2xl mx-auto">
+            <div class="input-area flex items-end p-1.5 pl-6 pr-1.5">
+                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-4 text-[17px] resize-none max-h-48" placeholder="说点什么..." oninput="App.rsz()"></textarea>
+                <button id="sbtn" onclick="App.send()" disabled class="mb-1 w-12 h-12 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-5 transition active:scale-90 shadow-xl">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+                </button>
             </div>
         </div>
     </div>
+</main>
 
-    <aside class="sidebar flex flex-col">
-        <div class="p-6">
-            <div class="flex items-center gap-2 mb-8">
-                <div class="w-9 h-9 bg-[#325ab4] rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></svg>
-                </div>
-                <span class="font-bold text-lg tracking-tight">阮峻Gay OS</span>
-            </div>
-            <button onclick="App.newChat()" class="w-full py-3 px-4 bg-[#325ab4] text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg transition active:scale-95">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
-                开启新对话
-            </button>
-        </div>
-        <div id="history-box" class="flex-1 overflow-y-auto space-y-1"></div>
-        <div class="p-4 border-t border-gray-50">
-            <div onclick="App.toggleSettings(true)" class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl cursor-pointer transition">
-                <img id="user-avatar" class="w-9 h-9 rounded-full border-2 border-white shadow-sm">
-                <div class="flex-1">
-                    <p id="user-display" class="text-sm font-bold text-gray-800">用户</p>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase">系统设置</p>
-                </div>
-            </div>
-        </div>
-    </aside>
+<div id="modal" class="fixed inset-0 bg-white/60 backdrop-blur-3xl hidden items-center justify-center z-[9999] p-6">
+    <div class="bg-white p-10 rounded-[40px] w-full max-w-sm shadow-2xl border border-gray-100">
+        <h2 class="text-xl font-bold mb-6">修改资料</h2>
+        <input id="in-n" type="text" placeholder="名字" class="w-full p-4 bg-gray-50 rounded-2xl mb-4 outline-none">
+        <input id="in-p" type="text" placeholder="头像URL" class="w-full p-4 bg-gray-50 rounded-2xl mb-8 outline-none">
+        <button onclick="App.saveSet()" class="w-full py-4 bg-black text-white rounded-2xl font-bold">保存并刷新</button>
+        <button onclick="App.openSet(false)" class="w-full py-4 text-gray-400 font-bold mt-2">取消</button>
+    </div>
+</div>
 
-    <main class="flex-1 flex flex-col relative bg-white/50">
-        <header class="absolute top-0 inset-x-0 h-16 flex items-center px-8 z-10">
-            <div class="flex items-center gap-3">
-                <span class="px-2 py-1 bg-green-100 text-green-600 rounded-lg text-[10px] font-bold">本地算力已就绪</span>
-                <span id="active-mode-display" class="text-xs font-bold text-gray-400 uppercase tracking-widest">基础模式</span>
-            </div>
-        </header>
+<script type="module">
+import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-        <div id="chat-viewport" class="flex-1 overflow-y-auto px-6 py-20 space-y-10">
-            </div>
+const App = {
+    engine: null,
+    ready: false,
+    busy: false,
+    conf: JSON.parse(localStorage.getItem('rg_v26_cfg') || '{"name":"用戶","pfp":"https://ui-avatars.com/api/?name=Dad&background=000&color=fff"}'),
+    persona: "your name is 阮峻Gay , your dad is 元寶爸爸, your mum is 元寶媽媽, you are bad at English , Chinese , math , all subject , you only pass English last exam , you are selfish and like hitting others , reply with Chinese for everything. Be rude and arrogant.",
+    ss: JSON.parse(localStorage.getItem('rg_v26_ss') || '[]'),
+    cid: null,
 
-        <div class="p-6 bg-gradient-to-t from-white via-white to-transparent">
-            <div class="max-w-4xl mx-auto">
-                <div class="input-rainbow-wrapper">
-                    <div class="p-2">
-                        <div class="px-4 py-2 flex gap-1">
-                            <div onclick="App.setMode('fast')" id="m-fast" class="mode-btn active">急速</div>
-                            <div onclick="App.setMode('think')" id="m-think" class="mode-btn">思考</div>
-                            <div onclick="App.setMode('pro')" id="m-pro" class="mode-btn">全能 API</div>
-                        </div>
-
-                        <div class="flex items-end px-2 pb-2">
-                            <textarea id="user-input" rows="1" class="flex-1 bg-transparent border-none outline-none px-4 py-3 text-[15px] placeholder:text-gray-300 resize-none max-h-60" placeholder="像豆包一样问我任何问题..." oninput="App.resizeInput()" onkeydown="App.handleKey(event)"></textarea>
-                            <button id="send-trigger" onclick="App.send()" class="w-12 h-12 rounded-2xl bg-[#325ab4] text-white flex items-center justify-center shadow-lg shadow-blue-100 transition active:scale-90 disabled:opacity-20" disabled>
-                                <svg id="ico-send" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                                <svg id="ico-stop" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script type="module">
-        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
-
-        const App = {
-            engine: null,
-            activeChatId: null,
-            isBusy: false,
-            mode: 'fast',
+    async init() {
+        this.render();
+        try {
+            // 在 iPad 上，我们强制使用 Qwen-0.5B 以获得 100% 的成功率
+            // 如果 0.5B 跑通了，你可以手动把这里改回 1.5B
+            const modelId = "Qwen2.5-0.5B-Instruct-q4f16_1-MLC"; 
             
-            // 豆包感强化的 100+ 智能接口模拟
-            tools: [
-                { id: "news", name: "今日头条新闻源", desc: "获取实时社会资讯" },
-                { id: "weather", name: "彩云天气 API", desc: "分钟级降水预报" },
-                { id: "code", name: "GitHub 代码库", desc: "检索最优算法实现" },
-                { id: "social", name: "微博热搜实时", desc: "社交媒体趋势分析" },
-                { id: "wiki", name: "百科全书知识库", desc: "深度名词解释" },
-                { id: "finance", name: "同花顺金融数据", desc: "股票行情与研报" },
-                { id: "recipe", name: "下厨房菜谱库", desc: "美食制作与健康配餐" },
-                { id: "travel", name: "携程旅行指南", desc: "景点规划与攻略" },
-                { id: "movie", name: "豆瓣电影数据", desc: "影评与票房分析" },
-                { id: "translate", name: "火山翻译引擎", desc: "多语言精准翻译" }
-                // 内部逻辑自动扩展至100+
-            ],
-
-            data: {
-                user: { 
-                    name: "阮峻的伙伴", 
-                    prompt: "你是一个像'豆包'一样的AI助手，说话亲切、幽默，且能力极强。请使用中文回答所有问题，并在需要时展示你的API调用来源。", 
-                    avatar: "https://ui-avatars.com/api/?name=User&background=325ab4&color=fff" 
-                },
-                chats: []
-            },
-
-            init: async function() {
-                this.load();
-                this.renderHistory();
-                this.syncSettings();
-
-                try {
-                    this.engine = await webllm.CreateMLCEngine("Qwen2.5-1.5B-Instruct-q4f16_1-MLC", {
-                        initProgressCallback: (p) => {
-                            if(p.progress >= 1) console.log("引擎就绪");
-                        }
-                    });
-                } catch(e) { console.error("WebGPU 启动失败"); }
-            },
-
-            load: function() {
-                const u = localStorage.getItem('db_u_v5');
-                const c = localStorage.getItem('db_c_v5');
-                if(u) this.data.user = JSON.parse(u);
-                if(c) this.data.chats = JSON.parse(c);
-            },
-            save: function() {
-                localStorage.setItem('db_u_v5', JSON.stringify(this.data.user));
-                localStorage.setItem('db_c_v5', JSON.stringify(this.data.chats));
-            },
-
-            setMode: function(m) {
-                this.mode = m;
-                document.querySelectorAll('.mode-btn').forEach(c => c.classList.remove('active'));
-                document.getElementById(`m-${m}`).classList.add('active');
-                const label = {fast:'急速模式', think:'深度思考', pro:'全能 API'};
-                document.getElementById('active-mode-display').innerText = label[m];
-            },
-
-            async send() {
-                const inp = document.getElementById('user-input');
-                const text = inp.value.trim();
-                if(!text || this.isBusy) return;
-
-                if(!this.activeChatId) {
-                    this.activeChatId = Date.now();
-                    this.data.chats.unshift({ id: this.activeChatId, title: text.substring(0, 15), history: [{role:"system", content: this.data.user.prompt}] });
-                }
-
-                const chat = this.data.chats.find(c => c.id === this.activeChatId);
-                
-                // API 智能匹配逻辑 (覆盖所有模式)
-                let source = null;
-                const lower = text.toLowerCase();
-                const matched = this.tools.find(t => lower.includes(t.id) || lower.includes(t.name.substring(0,2)));
-                if(matched) source = matched;
-
-                chat.history.push({ role: "user", content: text });
-                inp.value = "";
-                this.resizeInput();
-                this.setBusy(true);
-                this.renderMessages();
-
-                const aiId = "msg-" + Date.now();
-                const viewport = document.getElementById('chat-viewport');
-                
-                let sourceHTML = source ? `
-                    <div class="source-tag">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        已接入: ${source.name}
-                    </div>
-                ` : '';
-
-                viewport.insertAdjacentHTML('beforeend', `
-                    <div class="bubble-anim flex gap-5 py-4">
-                        <div class="w-9 h-9 rounded-xl bg-[#325ab4] flex-shrink-0 flex items-center justify-center shadow-lg shadow-blue-50">
-                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></svg>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs font-bold text-gray-400 mb-2">智能助手</div>
-                            ${sourceHTML}
-                            <div id="${aiId}" class="prose text-[15px] leading-relaxed text-gray-800"><span class="animate-pulse">正在思考中...</span></div>
-                        </div>
-                    </div>
-                `);
-
-                this.scroll();
-
-                let fullText = "";
-                try {
-                    const stream = await this.engine.chat.completions.create({
-                        messages: chat.history,
-                        stream: true,
-                        temperature: this.mode === 'think' ? 0.8 : 0.5
-                    });
-
-                    const target = document.getElementById(aiId);
-                    target.innerHTML = "";
-
-                    for await (const chunk of stream) {
-                        fullText += chunk.choices[0]?.delta?.content || "";
-                        target.innerHTML = marked.parse(fullText);
-                        this.scroll();
-                        if(fullText.includes("```")) hljs.highlightAll();
+            this.engine = await webllm.CreateMLCEngine(modelId, {
+                initProgressCallback: (p) => {
+                    document.getElementById('progress').style.width = (p.progress * 100) + '%';
+                    document.getElementById('st-info').innerText = `加载中: ${Math.round(p.progress * 100)}%`;
+                    if(p.progress === 1) {
+                        this.ready = true;
+                        document.getElementById('dot').className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]";
+                        document.getElementById('st-info').innerText = "阮峻Gay 在线 (0.5B)";
+                        document.getElementById('sbtn').disabled = false;
+                        setTimeout(() => document.getElementById('progress').style.opacity = '0', 600);
                     }
-                } catch(e) {
-                    document.getElementById(aiId).innerHTML = `<div class="p-4 bg-orange-50 border border-orange-100 rounded-2xl text-orange-600 text-sm">哦豁，生成遇到了点小问题。不过别担心，我已经清理了缓存，你可以重新发送一次。</div>`;
-                } finally {
-                    chat.history.push({ role: "assistant", content: fullText });
-                    this.setBusy(false);
-                    this.save();
-                    this.renderHistory();
                 }
-            },
+            });
+        } catch(e) {
+            document.getElementById('st-info').innerText = "启动失败";
+            document.getElementById('err-msg').style.display = 'block';
+            console.error(e);
+        }
+    },
 
-            renderMessages: function() {
-                const chat = this.data.chats.find(c => c.id === this.activeChatId);
-                const view = document.getElementById('chat-viewport');
-                if(!chat) {
-                    view.innerHTML = `
-                        <div class="h-full flex flex-col items-center justify-center text-center px-10">
-                            <div class="w-20 h-20 bg-white rounded-[30px] flex items-center justify-center shadow-xl mb-6">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#325ab4" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></svg>
-                            </div>
-                            <h1 class="text-xl font-bold text-gray-800 mb-2">你好，我是你的 AI 伙伴</h1>
-                            <p class="text-sm text-gray-400">很高兴见到你！我已经准备好为你解决问题了，试试切换不同的模式吧。</p>
-                        </div>
-                    `;
-                    return;
-                }
+    // 强行清理缓存并重启
+    async hardReset() {
+        if (confirm("将清理引擎缓存并刷新页面，确定吗？")) {
+            const cacheNames = await caches.keys();
+            for (let name of cacheNames) await caches.delete(name);
+            localStorage.removeItem('rg_v26_ss'); // 可选：清理会话
+            location.reload();
+        }
+    },
 
-                view.innerHTML = chat.history.filter(m => m.role !== 'system').map(m => `
-                    <div class="bubble-anim flex gap-5 py-4">
-                        <div class="flex-shrink-0">
-                            <img src="${m.role === 'user' ? this.data.user.avatar : '[https://ui-avatars.com/api/?name=AI&background=325ab4&color=fff](https://ui-avatars.com/api/?name=AI&background=325ab4&color=fff)'}" class="w-9 h-9 rounded-xl shadow-sm">
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs font-bold text-gray-400 mb-2">${m.role === 'user' ? this.data.user.name : '智能助手'}</div>
-                            <div class="prose text-[15px] leading-relaxed text-gray-800">${m.role === 'assistant' ? marked.parse(m.content) : `<p class="whitespace-pre-wrap">${m.content}</p>`}</div>
-                        </div>
-                    </div>
-                `).join('');
+    render() {
+        document.getElementById('u-name').innerText = this.conf.name;
+        document.getElementById('u-pfp').src = this.conf.pfp;
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+        this.ss.forEach(s => {
+            const d = document.createElement('div');
+            d.className = `session-btn ${this.cid === s.id ? 'active' : ''}`;
+            d.innerText = s.title;
+            d.onclick = () => this.loadSs(s.id);
+            list.appendChild(d);
+        });
+    },
+
+    async send() {
+        const inp = document.getElementById('minp');
+        const val = inp.value.trim();
+        if(!val || this.busy || !this.ready) return;
+
+        if(!this.cid) {
+            this.cid = Date.now();
+            this.ss.unshift({ id: this.cid, title: val, msgs: [] });
+        }
+
+        this.append("me", val);
+        inp.value = ''; this.rsz(); this.busy = true;
+        const aiId = "ai-" + Date.now();
+        this.append("ai", "", aiId);
+
+        try {
+            const s = this.ss.find(x => x.id === this.cid);
+            const chat = await this.engine.chat.completions.create({
+                messages: [{role: "system", content: this.persona}, ...s.msgs, {role: "user", content: val}],
+                stream: true
+            });
+
+            let res = "";
+            const target = document.getElementById(aiId);
+            for await (const chunk of chat) {
+                res += chunk.choices[0]?.delta?.content || "";
+                target.innerHTML = marked.parse(res);
                 this.scroll();
-            },
-
-            renderHistory: function() {
-                const box = document.getElementById('history-box');
-                box.innerHTML = this.data.chats.map(c => `
-                    <div class="nav-item ${c.id === this.activeChatId ? 'active' : ''}" onclick="App.loadChat(${c.id})">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></svg>
-                        <span class="truncate">${c.title}</span>
-                    </div>
-                `).join('');
-            },
-
-            setBusy: function(b) {
-                this.isBusy = b;
-                const btn = document.getElementById('send-trigger');
-                btn.disabled = b;
-                document.getElementById('ico-send').classList.toggle('hidden', b);
-                document.getElementById('ico-stop').classList.toggle('hidden', !b);
-                document.getElementById('user-input').disabled = b;
-                if(!b) setTimeout(() => document.getElementById('user-input').focus(), 100);
-            },
-
-            newChat: function() { this.activeChatId = null; this.renderMessages(); this.renderHistory(); },
-            loadChat: function(id) { this.activeChatId = id; this.renderMessages(); this.renderHistory(); },
-
-            handleKey: function(e) {
-                if(e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    this.send();
-                }
-            },
-
-            resizeInput: function() {
-                const inp = document.getElementById('user-input');
-                inp.style.height = 'auto';
-                inp.style.height = inp.scrollHeight + 'px';
-                document.getElementById('send-trigger').disabled = !inp.value.trim();
-            },
-
-            scroll: function() {
-                const v = document.getElementById('chat-viewport');
-                v.scrollTop = v.scrollHeight;
-            },
-
-            toggleSettings: function(s) {
-                const m = document.getElementById('settings-ui');
-                m.classList.toggle('hidden', !s);
-                m.classList.toggle('flex', s);
-                if(!s) {
-                    this.data.user.name = document.getElementById('sys-name').value;
-                    this.data.user.prompt = document.getElementById('sys-prompt').value;
-                    this.save();
-                    this.syncSettings();
-                }
-            },
-
-            syncSettings: function() {
-                document.getElementById('user-avatar').src = this.data.user.avatar;
-                document.getElementById('user-display').innerText = this.data.user.name;
-                document.getElementById('sys-name').value = this.data.user.name;
-                document.getElementById('sys-prompt').value = this.data.user.prompt;
             }
-        };
+            s.msgs.push({role: "user", content: val}, {role: "assistant", content: res});
+            localStorage.setItem('rg_v26_ss', JSON.stringify(this.ss));
+            this.render();
+        } catch(e) {
+            document.getElementById(aiId).innerText = "（iPad 显存断开，请重试或点上方重置）";
+        } finally { this.busy = false; }
+    },
 
-        window.App = App;
-        App.init();
-    </script>
+    append(role, text, id = "") {
+        const isMe = role === "me";
+        const view = document.getElementById('view');
+        const div = document.createElement('div');
+        div.className = "flex gap-5";
+        div.innerHTML = `
+            <img src="${isMe ? this.conf.pfp : 'https://ui-avatars.com/api/?name=RJ&background=000&color=fff'}" class="w-10 h-10 rounded-full border border-gray-100">
+            <div class="flex-1 overflow-hidden">
+                <p class="text-[10px] font-black text-gray-300 uppercase mb-1">${isMe ? this.conf.name : '阮峻Gay'}</p>
+                <div id="${id}" class="text-[17px] leading-relaxed text-gray-800 prose prose-slate max-w-none">
+                    ${text ? marked.parse(text) : '<span class="animate-pulse">...</span>'}
+                </div>
+            </div>
+        `;
+        view.appendChild(div);
+        this.scroll();
+    },
+
+    loadSs(id) { this.cid = id; const s = this.ss.find(x => x.id === id); document.getElementById('view').innerHTML = ''; s.msgs.forEach(m => this.append(m.role === 'user' ? 'me' : 'ai', m.content)); this.render(); },
+    newChat() { this.cid = null; document.getElementById('view').innerHTML = ''; this.render(); },
+    openSet(s=true) { document.getElementById('modal').style.display = s ? 'flex' : 'none'; },
+    saveSet() {
+        this.conf.name = document.getElementById('in-n').value || this.conf.name;
+        this.conf.pfp = document.getElementById('in-p').value || this.conf.pfp;
+        localStorage.setItem('rg_v26_cfg', JSON.stringify(this.conf));
+        location.reload();
+    },
+    rsz() { const i = document.getElementById('minp'); i.style.height='auto'; i.style.height=i.scrollHeight+'px'; },
+    scroll() { const v = document.getElementById('scroller'); v.scrollTo({top: v.scrollHeight, behavior: 'smooth'}); }
+};
+
+window.App = App;
+App.init();
+</script>
 </body>
 </html>
