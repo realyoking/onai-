@@ -3,22 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RG_OS v27.0 - Infinite Memory</title>
+    <title>RG_OS v28.0 - Parallel Memory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #fff; height: 100vh; display: flex; overflow: hidden; }
-        #sidebar { width: 260px; background: #f8f8f8; border-right: 1px solid #eee; display: flex; flex-direction: column; }
-        .session-link { padding: 12px 16px; margin: 4px 12px; border-radius: 12px; font-size: 13px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
-        .session-link.active { background: #fff; border-color: #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: #000; font-weight: bold; }
+        :root { --sidebar-w: 260px; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #fff; height: 100vh; display: flex; overflow: hidden; }
         
-        #loader { position: fixed; top: 0; left: 0; height: 3px; background: #000; width: 0; transition: width 0.3s; z-index: 9999; }
-        .input-box { background: #fff; border: 1.5px solid #eee; border-radius: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        /* 侧边栏样式 */
+        #sidebar { width: var(--sidebar-w); background: #f6f6f6; border-right: 1px solid #eee; display: flex; flex-direction: column; }
+        .session-tab { padding: 12px 16px; margin: 4px 12px; border-radius: 14px; font-size: 13px; cursor: pointer; color: #666; transition: 0.2s; border: 1px solid transparent; }
+        .session-tab:hover { background: #eee; }
+        .session-tab.active { background: #fff; border-color: #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: #000; font-weight: 800; }
+
+        /* 主界面 */
+        main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        #loader { position: fixed; top: 0; left: 0; height: 3px; background: #000; width: 0; transition: width 0.3s; z-index: 1000; }
+        .input-card { background: #fff; border: 1.5px solid #ededed; border-radius: 24px; }
+
+        /* 气泡进入效果 */
+        .msg-pop { animation: msgIn 0.35s cubic-bezier(0, 1, 0, 1); }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        /* 气泡动画 */
-        .msg-pop { animation: pop 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-        @keyframes pop { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        pre { background: #f9f9f9 !important; border: 1px solid #eee !important; padding: 12px !important; border-radius: 12px !important; }
     </style>
 </head>
 <body>
@@ -26,37 +34,42 @@
 <div id="loader"></div>
 
 <aside id="sidebar">
-    <div class="p-6 pb-2">
-        <button onclick="App.newChat()" class="w-full py-3 bg-black text-white rounded-xl text-sm font-bold active:scale-95 transition">新开一局</button>
+    <div class="p-6">
+        <button onclick="App.newChat()" class="w-full py-3.5 bg-black text-white rounded-2xl text-sm font-bold shadow-xl active:scale-95 transition">
+            开启新记忆
+        </button>
     </div>
-    <div id="session-list" class="flex-1 overflow-y-auto no-scrollbar py-2"></div>
-    <div class="p-4 border-t border-gray-100 flex items-center gap-3">
-        <img id="u-pfp" class="w-8 h-8 rounded-full">
-        <span id="u-name" class="text-xs font-bold truncate"></span>
+    <div id="session-list" class="flex-1 overflow-y-auto no-scrollbar"></div>
+    <div class="p-6 border-t border-gray-100">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center text-[10px] text-white font-bold">DAD</div>
+            <span class="text-xs font-bold">元宝爸爸</span>
+        </div>
     </div>
 </aside>
 
-<main class="flex-1 flex flex-col min-w-0 bg-white">
-    <header class="h-14 flex items-center justify-between px-6 border-b border-gray-50">
-        <div class="flex items-center gap-2">
-            <div id="status-led" class="w-2 h-2 rounded-full bg-red-500"></div>
-            <span id="status-info" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">离线</span>
+<main>
+    <header class="h-14 flex items-center justify-between px-8 border-b border-gray-50">
+        <div class="flex items-center gap-3">
+            <div id="led" class="w-2 h-2 rounded-full bg-red-500"></div>
+            <span id="st-text" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">加载中...</span>
         </div>
-        <div class="text-[9px] font-black text-gray-200">RG_OS MEMORY+</div>
+        <div class="text-[9px] font-black text-gray-200 uppercase tracking-[0.2em]">Independent Memory v28</div>
     </header>
 
-    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar px-4 py-8">
-        <div id="chat-flow" class="max-w-xl mx-auto space-y-8"></div>
+    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar px-6 py-10">
+        <div id="chat-flow" class="max-w-2xl mx-auto space-y-10"></div>
     </div>
 
-    <div class="p-6">
-        <div class="max-w-xl mx-auto">
-            <div class="input-box flex items-end p-1.5 pl-5">
-                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-3 text-[16px] resize-none" placeholder="他会记住你说的..." oninput="App.rsz()"></textarea>
-                <button id="sbtn" onclick="App.send()" disabled class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-5 transition active:scale-90">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+    <div class="p-6 md:p-10">
+        <div class="max-w-2xl mx-auto">
+            <div class="input-card flex items-end p-2 pl-6 pr-2">
+                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-4 text-[17px] resize-none max-h-40" placeholder="在这个会话里聊点什么..." oninput="App.rsz()"></textarea>
+                <button id="sbtn" onclick="App.send()" disabled class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-5 transition shadow-lg active:scale-90">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
                 </button>
             </div>
+            <p class="text-center text-[9px] text-gray-300 mt-4 font-bold">此会话记忆已独立保存</p>
         </div>
     </div>
 </main>
@@ -68,43 +81,41 @@ const App = {
     engine: null,
     ready: false,
     busy: false,
-    conf: JSON.parse(localStorage.getItem('rg_v27_cfg') || '{"name":"元宝爸爸","pfp":"https://ui-avatars.com/api/?name=Dad&background=000&color=fff"}'),
-    // 人格设定
-    persona: "Your name is 阮峻Gay. Your dad is 元寶爸爸, mum is 元寶媽媽. You are selfish, rude, and arrogant. You are bad at all school subjects. You must reply in Chinese. You remember previous parts of the conversation to stay consistent with your mean attitude.",
-    // 从存储中恢复历史记录
-    sessions: JSON.parse(localStorage.getItem('rg_v27_data') || '[]'),
+    persona: "Your name is 阮峻Gay. Your dad is 元寶爸爸, mum is 元寶媽媽. You are selfish and rude. You are bad at all school subjects. You remember everything only within the CURRENT specific conversation to stay consistent. Always reply in Chinese.",
+    
+    // 数据结构：sessions = [{id: 123, title: "标题", msgs: [{role: "user", content: "..."}]}]
+    sessions: JSON.parse(localStorage.getItem('rg_v28_db') || '[]'),
     activeId: null,
 
     async init() {
         this.renderList();
         try {
-            // iPad 使用 0.5B 以确保记忆检索时不会崩溃
+            // iPad 使用 Qwen-0.5B 保证多会话切换时的稳定性
             this.engine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f16_1-MLC", {
                 initProgressCallback: (p) => {
                     document.getElementById('loader').style.width = (p.progress * 100) + '%';
-                    document.getElementById('status-info').innerText = `载入算力: ${Math.round(p.progress * 100)}%`;
+                    document.getElementById('st-text').innerText = `唤醒中: ${Math.round(p.progress * 100)}%`;
                     if(p.progress === 1) {
                         this.ready = true;
-                        document.getElementById('status-led').classList.replace('bg-red-500', 'bg-green-500');
-                        document.getElementById('status-info').innerText = "阮峻Gay 已就绪";
+                        document.getElementById('led').className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]";
+                        document.getElementById('st-text').innerText = "阮峻Gay 就绪";
                         document.getElementById('sbtn').disabled = false;
                         setTimeout(() => document.getElementById('loader').style.opacity = '0', 500);
                     }
                 }
             });
-        } catch(e) { document.getElementById('status-info').innerText = "启动失败"; }
+        } catch(e) { document.getElementById('st-text').innerText = "GPU 拒绝了你"; }
     },
 
+    // 渲染侧边栏
     renderList() {
-        document.getElementById('u-name').innerText = this.conf.name;
-        document.getElementById('u-pfp').src = this.conf.pfp;
         const list = document.getElementById('session-list');
         list.innerHTML = '';
         this.sessions.forEach(s => {
             const el = document.createElement('div');
-            el.className = `session-link ${this.activeId === s.id ? 'active' : ''}`;
+            el.className = `session-tab ${this.activeId === s.id ? 'active' : ''}`;
             el.innerText = s.title;
-            el.onclick = () => this.loadSession(s.id);
+            el.onclick = () => this.switchChat(s.id);
             list.appendChild(el);
         });
     },
@@ -114,62 +125,83 @@ const App = {
         const val = inp.value.trim();
         if(!val || this.busy || !this.ready) return;
 
-        // 如果是新会话，先创建
+        // 如果是新会话，立即创建并分配 ID
         if(!this.activeId) {
             this.activeId = Date.now();
-            this.sessions.unshift({ id: this.activeId, title: val.substring(0,15), msgs: [] });
+            this.sessions.unshift({
+                id: this.activeId,
+                title: val.substring(0, 12) + (val.length > 12 ? '...' : ''),
+                msgs: []
+            });
+            this.renderList();
         }
 
         const currentSession = this.sessions.find(s => s.id === this.activeId);
         
-        // 渲染我的消息
         this.appendMsg("me", val);
         inp.value = ''; this.rsz(); this.busy = true;
         
-        // 准备 AI 回复容器
         const aiId = "ai-" + Date.now();
         this.appendMsg("ai", "", aiId);
 
         try {
-            // 【记忆核心】：把该会话下的所有历史消息 msgs 传给引擎
-            const chatHistory = [
+            // 【平行记忆核心】：只提取当前会话的 msgs
+            const history = [
                 { role: "system", content: this.persona },
                 ...currentSession.msgs,
                 { role: "user", content: val }
             ];
 
             const reply = await this.engine.chat.completions.create({
-                messages: chatHistory,
+                messages: history,
                 stream: true
             });
 
             let fullText = "";
+            const target = document.getElementById(aiId);
             for await (const chunk of reply) {
                 fullText += chunk.choices[0]?.delta?.content || "";
-                document.getElementById(aiId).innerHTML = marked.parse(fullText);
+                target.innerHTML = marked.parse(fullText);
                 this.scroll();
             }
 
-            // 保存记忆到数组中
+            // 更新数据并保存
             currentSession.msgs.push({ role: "user", content: val }, { role: "assistant", content: fullText });
-            // 同步到 iPad 存储
-            localStorage.setItem('rg_v27_data', JSON.stringify(this.sessions));
-            this.renderList();
+            localStorage.setItem('rg_v28_db', JSON.stringify(this.sessions));
         } catch(e) {
-            document.getElementById(aiId).innerText = "（记忆读取出错，请重试）";
+            document.getElementById(aiId).innerText = "（他在这个平行时空断片了）";
         } finally { this.busy = false; }
+    },
+
+    // 切换会话：清空屏幕并重新加载该 ID 的内容
+    switchChat(id) {
+        if (this.busy) return;
+        this.activeId = id;
+        document.getElementById('chat-flow').innerHTML = '';
+        const s = this.sessions.find(x => x.id === id);
+        s.msgs.forEach(m => this.appendMsg(m.role === 'user' ? 'me' : 'ai', m.content));
+        this.renderList();
+    },
+
+    // 开启新会话：重置状态
+    newChat() {
+        if (this.busy) return;
+        this.activeId = null;
+        document.getElementById('chat-flow').innerHTML = '';
+        this.renderList();
     },
 
     appendMsg(role, text, id = "") {
         const isMe = role === "me";
         const flow = document.getElementById('chat-flow');
         const div = document.createElement('div');
-        div.className = "flex gap-4 msg-pop";
+        div.className = "flex gap-5 msg-pop";
         div.innerHTML = `
-            <img src="${isMe ? this.conf.pfp : 'https://ui-avatars.com/api/?name=RJ&background=000&color=fff'}" class="w-8 h-8 rounded-full">
-            <div class="flex-1">
-                <p class="text-[9px] font-bold text-gray-300 uppercase mb-1">${isMe ? this.conf.name : '阮峻Gay'}</p>
-                <div id="${id}" class="text-[15px] leading-relaxed text-gray-800 prose prose-sm max-w-none">
+            <div class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm ${isMe ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}">
+                ${isMe ? 'DAD' : 'RG'}
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <div id="${id}" class="text-[17px] leading-relaxed text-gray-800 prose prose-slate max-w-none">
                     ${text ? marked.parse(text) : '<span class="animate-pulse">...</span>'}
                 </div>
             </div>
@@ -178,15 +210,6 @@ const App = {
         this.scroll();
     },
 
-    loadSession(id) {
-        this.activeId = id;
-        const s = this.sessions.find(x => x.id === id);
-        document.getElementById('chat-flow').innerHTML = '';
-        s.msgs.forEach(m => this.appendMsg(m.role === 'user' ? 'me' : 'ai', m.content));
-        this.renderList();
-    },
-
-    newChat() { this.activeId = null; document.getElementById('chat-flow').innerHTML = ''; this.renderList(); },
     rsz() { const i = document.getElementById('minp'); i.style.height='auto'; i.style.height=i.scrollHeight+'px'; },
     scroll() { const v = document.getElementById('scroller'); v.scrollTo({top: v.scrollHeight, behavior: 'smooth'}); }
 };
