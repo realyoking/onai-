@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RG_OS v35.0 - 终极纯净全中文版</title>
+    <title>RG_OS v36.0 - 1.5B 算力升级版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet">
@@ -60,7 +60,7 @@
     <header class="h-16 flex items-center justify-between px-8 border-b border-gray-100 bg-white">
         <div class="flex items-center gap-3">
             <div id="led-dot" class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></div>
-            <span id="st-label" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">正在初始化模型...</span>
+            <span id="st-label" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">正在初始化 1.5B 大模型...</span>
         </div>
         <div class="flex gap-3">
             <button onclick="App.reInit()" class="text-[10px] font-bold border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition active:scale-90 text-gray-600">重连算力</button>
@@ -118,8 +118,8 @@ marked.setOptions({ renderer });
 const App = {
     engine: null,
     ready: false,
-    user: JSON.parse(localStorage.getItem('rg_v35_u') || '{"name":"元宝爸爸"}'),
-    db: JSON.parse(localStorage.getItem('rg_v35_db') || '[]'),
+    user: JSON.parse(localStorage.getItem('rg_v36_u') || '{"name":"元宝爸爸"}'),
+    db: JSON.parse(localStorage.getItem('rg_v36_db') || '[]'),
     activeId: null,
 
     getPersona() {
@@ -140,17 +140,18 @@ const App = {
 
     async reInit() {
         this.ready = false;
-        document.getElementById('st-label').innerText = "正在唤醒模型参数...";
+        document.getElementById('st-label').innerText = "正在唤醒 1.5B 模型参数...";
         document.getElementById('led-dot').className = "w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse";
         try {
-            this.engine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f16_1-MLC", {
+            // 这里将模型升级为 Qwen2.5-1.5B-Instruct，参数量更大，逻辑更强，但仍能在现代 iPad 上运行
+            this.engine = await webllm.CreateMLCEngine("Qwen2.5-1.5B-Instruct-q4f16_1-MLC", {
                 initProgressCallback: (p) => {
                     document.getElementById('progress-bar').style.width = (p.progress * 100) + '%';
-                    document.getElementById('st-label').innerText = `同步算力进度: ${Math.round(p.progress * 100)}%`;
+                    document.getElementById('st-label').innerText = `同步 1.5B 算力进度: ${Math.round(p.progress * 100)}%`;
                     if(p.progress === 1) {
                         this.ready = true;
                         document.getElementById('led-dot').className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]";
-                        document.getElementById('st-label').innerText = "阮峻Gay 已上线并处于易怒状态";
+                        document.getElementById('st-label').innerText = "阮峻Gay 1.5B 已上线并处于易怒状态";
                         document.getElementById('sbtn').disabled = false;
                         setTimeout(() => document.getElementById('progress-bar').style.opacity = '0', 600);
                     }
@@ -158,7 +159,7 @@ const App = {
             });
         } catch(e) { 
             console.error(e);
-            document.getElementById('st-label').innerText = "GPU启动失败！请在设置>Safari>高级>功能标志中开启 WebGPU，并关闭其他网页。";
+            document.getElementById('st-label').innerText = "GPU启动失败！请清理后台，并在设置>Safari>高级>功能标志中开启 WebGPU。";
             document.getElementById('led-dot').className = "w-2.5 h-2.5 rounded-full bg-red-600";
         }
     },
@@ -205,7 +206,7 @@ const App = {
                 this.scroll();
             }
             current.msgs.push({role: "user", content: val}, {role: "assistant", content: fullText});
-            localStorage.setItem('rg_v35_db', JSON.stringify(this.db));
+            localStorage.setItem('rg_v36_db', JSON.stringify(this.db));
         } finally { this.busy = false; }
     },
 
@@ -241,7 +242,7 @@ const App = {
     openSettings(s) { document.getElementById('settings-modal').style.display = s ? 'flex' : 'none'; },
     saveUser() {
         const n = document.getElementById('in-user-name').value.trim();
-        if(n) { this.user.name = n; localStorage.setItem('rg_v35_u', JSON.stringify(this.user)); location.reload(); }
+        if(n) { this.user.name = n; localStorage.setItem('rg_v36_u', JSON.stringify(this.user)); location.reload(); }
     },
     runCode(b64) {
         document.getElementById('p-frame').srcdoc = decodeURIComponent(escape(atob(b64)));
