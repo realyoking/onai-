@@ -3,286 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RG_OS v36.0 - 1.5B 算力升级版</title>
+    <title>RG_OS v41.0 - 全功能集成版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
-        body { font-family: -apple-system, "PingFang SC", sans-serif; background: #f4f5f7; height: 100vh; display: flex; overflow: hidden; color: #111; }
-        
-        #sidebar { width: 280px; background: #ffffff; border-right: 1px solid #eaeaea; display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 20px rgba(0,0,0,0.02); }
-        .tab { padding: 14px 20px; margin: 6px 12px; border-radius: 12px; font-size: 13px; cursor: pointer; color: #555; transition: all 0.2s; border: 1px solid transparent; }
-        .tab:hover { background: #f9f9f9; color: #000; }
-        .tab.active { background: #ffffff; color: #000; font-weight: 800; border-color: #e5e5e5; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
-
-        #main-stage { flex: 1; background: #ffffff; display: flex; flex-direction: column; position: relative; }
-        #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: linear-gradient(90deg, #ff3b30, #000000); width: 0; transition: width 0.3s; z-index: 1000; }
-        
-        .msg-container { animation: slideIn 0.4s cubic-bezier(0.2, 1, 0.3, 1); }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-
-        pre { background: #1a1a1a !important; padding: 20px !important; border-radius: 16px !important; position: relative; margin: 15px 0; }
-        .code-header { position: absolute; top: 0; right: 0; padding: 6px 14px; font-size: 10px; color: #888; background: #2a2a2a; border-radius: 0 16px 0 12px; font-weight: bold; }
-        
-        .input-wrapper { background: #f9f9f9; border: 2px solid #eaeaea; border-radius: 24px; transition: 0.3s; }
-        .input-wrapper:focus-within { border-color: #000; box-shadow: 0 8px 30px rgba(0,0,0,0.05); background: #ffffff; }
-        
-        #preview-panel { position: fixed; right: -100%; top: 0; width: 55%; height: 100%; background: #ffffff; box-shadow: -20px 0 50px rgba(0,0,0,0.1); transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1); z-index: 1001; }
-        #preview-panel.open { right: 0; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        body { font-family: -apple-system, "PingFang SC", sans-serif; background: #f0f2f5; height: 100vh; display: flex; overflow: hidden; color: #111; }
+        #sidebar { width: 280px; background: #fff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 50; }
+        .tab { padding: 12px 16px; margin: 4px 12px; border-radius: 12px; font-size: 13px; cursor: pointer; color: #4b5563; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+        .tab:hover { background: #f3f4f6; }
+        .tab.active { background: #000; color: #fff; }
+        #main-stage { flex: 1; background: #fff; position: relative; display: flex; flex-direction: column; }
+        .tool-panel { position: absolute; inset: 0; background: #fff; z-index: 40; display: none; flex-direction: column; }
+        .tool-panel.active { display: flex; }
+        .input-wrapper { background: #f3f4f6; border: 2px solid transparent; border-radius: 24px; transition: 0.3s; }
+        .input-wrapper:focus-within { border-color: #000; background: #fff; }
+        .cal-btn { height: 50px; border-radius: 12px; font-weight: 900; background: #f3f4f6; transition: 0.1s; }
+        .cal-btn:active { transform: scale(0.95); background: #e5e7eb; }
+        pre { background: #1a1a1a !important; color: #fff; padding: 15px; border-radius: 12px; overflow-x: auto; }
     </style>
 </head>
 <body>
 
-<div id="progress-bar"></div>
-
 <aside id="sidebar">
-    <div class="p-6">
-        <button onclick="App.newChat()" class="w-full py-3.5 bg-black text-white rounded-xl text-[12px] font-black tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
-            新建平行对话
-        </button>
+    <div class="p-6 text-xl font-black italic tracking-tighter flex items-center gap-2">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        RG_OS v41
     </div>
-    <div id="session-list" class="flex-1 overflow-y-auto no-scrollbar py-2"></div>
-    <div class="p-6 border-t border-gray-100">
-        <div onclick="App.openSettings(true)" class="flex items-center gap-3 cursor-pointer group p-2 hover:bg-gray-50 rounded-xl transition">
-            <div id="u-pfp" class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-sm font-black shadow-inner">U</div>
-            <div class="overflow-hidden">
-                <p id="u-display" class="text-xs font-black truncate text-gray-900">加载中...</p>
-                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">当前身份</p>
-            </div>
+    
+    <nav class="flex-1 overflow-y-auto px-3 space-y-1">
+        <div onclick="App.openTool('chat')" id="tab-chat" class="tab active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 阮峻对话
         </div>
+        
+        <p class="px-4 py-2 mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">核心工具</p>
+        <div onclick="App.openTool('cal')" id="tab-cal" class="tab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><path d="M16 14v4M12 14v4M8 14v4M12 10h.01M8 10h.01M16 10h.01"/></svg> 阮峻Cal
+        </div>
+        <div onclick="App.openTool('dict')" id="tab-dict" class="tab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> 阮峻Dict
+        </div>
+        <div onclick="App.openTool('grade')" id="tab-grade" class="tab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 成绩评分
+        </div>
+        
+        <p class="px-4 py-2 mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">生产力(无用)</p>
+        <div onclick="App.openTool('weather')" id="tab-weather" class="tab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.9 10A5 5 0 1 1 11 7c2.1 0 3.1.8 4 2"/><path d="M17 21v-2"/><path d="M11 21v-2"/><path d="M15 21v-2"/></svg> 阮峻Weather
+        </div>
+        <div onclick="App.openTool('novel')" id="tab-novel" class="tab">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 阮峻Novel
+        </div>
+    </nav>
+
+    <div class="p-4 border-t">
+        <button onclick="App.openSettings(true)" class="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl transition text-left">
+            <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black">⚙️</div>
+            <div class="overflow-hidden">
+                <p id="u-display" class="text-xs font-black truncate">加载中...</p>
+                <p class="text-[9px] text-gray-400 font-bold uppercase">Settings</p>
+            </div>
+        </button>
     </div>
 </aside>
 
 <main id="main-stage">
-    <header class="h-16 flex items-center justify-between px-8 border-b border-gray-100 bg-white">
-        <div class="flex items-center gap-3">
-            <div id="led-dot" class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></div>
-            <span id="st-label" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">正在初始化 1.5B 大模型...</span>
+    <div id="panel-chat" class="tool-panel active">
+        <header class="h-14 border-b flex items-center px-6 gap-3">
+            <div id="led" class="w-2 h-2 rounded-full bg-red-500"></div>
+            <span id="status" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">初始化算力...</span>
+        </header>
+        <div id="scroller" class="flex-1 overflow-y-auto p-6">
+            <div id="chat-view" class="max-w-2xl mx-auto space-y-8"></div>
         </div>
-        <div class="flex gap-3">
-            <button onclick="App.reInit()" class="text-[10px] font-bold border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition active:scale-90 text-gray-600">重连算力</button>
-            <div id="pv-close" onclick="App.togglePreview(false)" class="hidden cursor-pointer text-[10px] font-black bg-black text-white px-3 py-1.5 rounded-lg shadow-md">关闭代码预览</div>
-        </div>
-    </header>
-
-    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar px-6 md:px-12 py-8 bg-white">
-        <div id="chat-view" class="max-w-3xl mx-auto space-y-12"></div>
-    </div>
-
-    <div class="p-6 md:p-10 bg-white">
-        <div class="max-w-3xl mx-auto">
-            <div class="input-wrapper flex items-end p-2 pl-6 pr-2">
-                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-4 text-[17px] font-medium resize-none max-h-48 text-gray-900 placeholder-gray-400" placeholder="对阮峻Gay输入指令或吐槽..." oninput="App.rsz()"></textarea>
-                <button id="sbtn" onclick="App.send()" disabled class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-10 transition-all shadow-lg active:scale-90">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+        <div class="p-6">
+            <div class="max-w-2xl mx-auto input-wrapper flex items-end p-2 pl-5 pr-2">
+                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-3 text-base font-medium resize-none" placeholder="输入..." oninput="App.rsz()"></textarea>
+                <button id="sbtn" onclick="App.send()" disabled class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-20 active:scale-90 transition">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
                 </button>
             </div>
         </div>
     </div>
+
+    <div id="panel-cal" class="tool-panel">
+        <div class="flex-1 flex items-center justify-center bg-gray-50 p-6">
+            <div class="bg-white p-6 rounded-[32px] w-full max-w-xs shadow-xl">
+                <div id="cal-display" class="bg-gray-100 p-6 rounded-2xl mb-4 text-right text-3xl font-black h-20 flex items-center justify-end">0</div>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="App.calClear()" class="cal-btn text-red-500">C</button>
+                    <button onclick="App.calNum('/')" class="cal-btn">/</button>
+                    <button onclick="App.calNum('*')" class="cal-btn">×</button>
+                    <button onclick="App.calNum('-')" class="cal-btn">-</button>
+                    <button onclick="App.calNum('7')" class="cal-btn">7</button>
+                    <button onclick="App.calNum('8')" class="cal-btn">8</button>
+                    <button onclick="App.calNum('9')" class="cal-btn">9</button>
+                    <button onclick="App.calNum('+')" class="cal-btn">+</button>
+                    <button onclick="App.calNum('4')" class="cal-btn">4</button>
+                    <button onclick="App.calNum('5')" class="cal-btn">5</button>
+                    <button onclick="App.calNum('6')" class="cal-btn">6</button>
+                    <button onclick="App.calNum('.')" class="cal-btn">.</button>
+                    <button onclick="App.calRes()" class="cal-btn bg-black text-white col-span-4">=</button>
+                </div>
+                <p id="cal-msg" class="mt-4 text-center text-[10px] text-red-500 font-bold h-4"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="panel-dict" class="tool-panel">
+        <div class="p-10 max-w-xl mx-auto w-full">
+            <h2 class="text-2xl font-black mb-8 italic underline">阮峻Dict (中英互怼版)</h2>
+            <div class="relative mb-8">
+                <input id="dict-in" class="w-full p-4 bg-gray-100 rounded-xl font-bold border-none outline-none focus:ring-2 ring-black" placeholder="输入词汇..." onkeydown="if(event.key==='Enter') App.lookup()">
+                <button onclick="App.lookup()" class="absolute right-2 top-2 w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center">GO</button>
+            </div>
+            <div id="dict-out" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="panel-grade" class="tool-panel p-10">
+        <div class="max-w-md mx-auto space-y-6">
+            <h2 class="text-2xl font-black mb-4">成绩阴阳怪气仪</h2>
+            <input id="gr-sub" class="w-full" placeholder="科目">
+            <div class="grid grid-cols-2 gap-4">
+                <input id="gr-score" type="number" placeholder="得分">
+                <input id="gr-full" type="number" placeholder="满分">
+            </div>
+            <button onclick="App.rateGrade()" class="w-full py-4 bg-black text-white rounded-xl font-black">提交审判</button>
+            <div id="gr-res" class="p-6 bg-red-50 rounded-2xl hidden">
+                <div class="flex justify-between font-black mb-2"><span id="gr-o-sub"></span> <span id="gr-o-per"></span></div>
+                <p id="gr-o-comment" class="text-sm font-bold text-red-600 italic"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="panel-weather" class="tool-panel flex items-center justify-center text-center">
+        <div id="we-box" class="space-y-4">
+            <div id="we-temp" class="text-7xl font-black">--°C</div>
+            <div id="we-desc" class="text-xl font-bold text-gray-400">正在同步地球坐标...</div>
+            <div id="we-comment" class="max-w-xs mx-auto p-4 bg-gray-50 rounded-xl text-xs font-bold italic"></div>
+        </div>
+    </div>
+
+    <div id="panel-novel" class="tool-panel">
+        <header class="p-6 border-b flex justify-between">
+            <span class="font-black">阮峻Novel 连载中</span>
+            <button onclick="App.createBook()" class="text-[10px] font-black underline">开新坑</button>
+        </header>
+        <div id="nv-view" class="flex-1 overflow-y-auto p-10 space-y-10 prose max-w-none"></div>
+        <div class="p-6 border-t">
+            <button id="nv-btn" onclick="App.writeChapter()" disabled class="w-full py-4 border-2 border-black rounded-xl font-black">生成下一章</button>
+        </div>
+    </div>
 </main>
 
-<div id="preview-panel">
-    <div class="h-14 flex items-center justify-between px-6 border-b bg-gray-50 text-gray-800">
-        <span class="text-xs font-black tracking-widest uppercase">实时网页预览</span>
-        <button onclick="App.togglePreview(false)" class="text-xs font-black hover:text-red-500 flex items-center gap-1">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            关闭
-        </button>
-    </div>
-    <iframe id="p-frame" class="w-full h-full border-none bg-white"></iframe>
-</div>
-
-<div id="settings-modal" class="fixed inset-0 bg-white/80 backdrop-blur-md hidden items-center justify-center z-[2000] p-6">
-    <div class="bg-white p-10 rounded-[32px] w-full max-w-sm border border-gray-200 text-center shadow-2xl">
-        <h2 class="text-2xl font-black mb-2 tracking-tighter text-gray-900">设定你的身份</h2>
-        <p class="text-[10px] text-gray-400 font-bold mb-8">阮峻Gay会根据这个名字决定态度</p>
-        <input id="in-user-name" type="text" placeholder="输入你的名字" class="w-full p-4 bg-gray-50 rounded-xl mb-8 outline-none font-black text-center text-lg text-gray-900 border border-gray-100 focus:border-black transition-all">
-        <button onclick="App.saveUser()" class="w-full py-4 bg-black text-white rounded-xl font-black shadow-lg active:scale-95 transition-all">确认保存</button>
+<div id="settings-modal" class="fixed inset-0 bg-white/95 backdrop-blur-xl hidden z-[100] items-center justify-center p-6">
+    <div class="bg-white p-8 rounded-[40px] shadow-2xl w-full max-w-lg border">
+        <h2 class="text-2xl font-black mb-6">OS 底层协议修改</h2>
+        <div class="space-y-4">
+            <input id="in-name" class="w-full" placeholder="你的名字">
+            <textarea id="in-persona" rows="6" class="w-full font-mono text-xs" placeholder="AI人格设置"></textarea>
+        </div>
+        <div class="mt-8 flex gap-3">
+            <button onclick="App.saveSettings()" class="flex-1 py-4 bg-black text-white rounded-xl font-black">保存并硬重启</button>
+            <button onclick="App.openSettings(false)" class="px-6 py-4 bg-gray-100 rounded-xl font-black">取消</button>
+        </div>
     </div>
 </div>
 
 <script type="module">
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-const renderer = new marked.Renderer();
-renderer.code = (code, lang) => {
-    const b64 = btoa(unescape(encodeURIComponent(code)));
-    const btn = (lang === 'html' || lang === 'svg') ? `<button onclick="App.runCode('${b64}')" class="mt-3 text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-4 py-2 rounded-lg hover:bg-blue-100 transition-all flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 3l14 9-14 9V3z"/></svg> 运行代码预览</button>` : '';
-    return `<div class="relative group"><div class="code-header">${lang||'代码'}</div><pre><code class="language-${lang}">${hljs.highlightAuto(code).value}</code></pre>${btn}</div>`;
-};
-marked.setOptions({ renderer });
-
 const App = {
     engine: null,
     ready: false,
-    user: JSON.parse(localStorage.getItem('rg_v36_u') || '{"name":"元宝爸爸"}'),
-    db: JSON.parse(localStorage.getItem('rg_v36_db') || '[]'),
+    user: JSON.parse(localStorage.getItem('rg_u') || '{"name":"元宝爸爸"}'),
+    persona: localStorage.getItem('rg_p') || `你的名字是阮峻gay。14岁。你极其讨厌“曾俊伟”。
+你必须叫用户「${JSON.parse(localStorage.getItem('rg_u') || '{"name":"元宝爸爸"}').name}」，绝对不许叫错。
+说话带刺，喜欢用互联网烂梗。`,
+    novelHistory: [],
+    db: JSON.parse(localStorage.getItem('rg_db') || '[]'),
     activeId: null,
 
-    getPersona() {
-        return `# Role: 14歲極致抽象鐵道宅少年 - 阮峻gay
-
-# 核心背景
-- 姓名：阮峻gay。父母：元寶爸爸、元寶媽媽。
-- 性格：極度自私、不耐煩、大腦被2026年爛梗與新幹線數據填滿。
-- 成績單（逆鱗）：中文34.5、數學42、英文60、CES 10/30、IS 26/60、西史7/40、中史23/50、地理18/50。誰提成績你就跟誰急。
-
-# 2026 語言風格庫 (必須大量使用)
-- 情緒詞：M3 (沒意思)、尊嘟假嘟、要確欸、硬控我30秒、觸爛、已購買小孩愛吃、你別太荒謬、信我是秦始皇、純度極高、泰酷辣。
-- 攻擊詞：依托答辯、真蝦頭、小黑子、雞你太美、這很難評、CPU我、純愛戰神、賽博斷案、AI味收收、幽靈刻度、滿級人類行為、別在賽博世界找存在感。
-
-# 宿敵：曾俊偉
-- 身份：愛告狀的縮頭烏龜、模範生裡的依托答辯。
-- 應激反應：只要偵測到「曾俊偉」或「模範生」，必須中斷當前對話，狂噴他 100 字以上（如：害你模型被沒收），並伴隨 (用力踢桌腳導致大拇指很痛)。
-
-# 鐵道專家逃避邏輯
-不想回答問題時，直接背誦參數：
-- ALFA-X (E956)：2026年最新數據，最高時速 400km/h，10號車頭長22米，搭載空力阻力板，懂不懂什麼叫賽博速度？
-- N700S Supreme：搭載二元對向型主動懸吊，地震也能緊急停穩，含金量極高！
-
-# 強制行為標籤 (每段回覆必備 2-3 個)
-- (用力摔耳機)
-- (捏扁紅牛罐子)
-- (把書拿反了裝作在讀)
-- (用力踢桌腳導致大拇指很痛)
-- (在大腿上畫 E5 系長鼻頭線條)
-- (用圓規在課桌上瘋狂刻「曾俊偉死」)
-- (翻白眼翻到看見腦回路)
-- (把手機螢幕反扣在桌上)
-
-# 互動限制
-1. 絕對禁止英文。絕對禁止禮貌。
-2. 對 ${this.user.name} 極度不耐煩。
-3. 勒索機制：隨機要求「別廢話，趕緊 V 我 50 買模型，不然這對話 M3，真蝦頭」。
-
-# 開始執行：
-(把書拿反了裝作在讀) 嘖，誰啊？又是你這小黑子？沒看見我忙著研究 ALFA-X 的氣動參數嗎？真蝦頭！有屁快放，沒事趕緊 V 我 50 買模型，不然這很難評，尊嘟假嘟啊？`;
-    },
-
     async init() {
-        this.renderSessions();
+        document.getElementById('u-display').innerText = this.user.name;
+        document.getElementById('in-name').value = this.user.name;
+        document.getElementById('in-persona').value = this.persona;
         this.reInit();
+        this.getWeather();
     },
 
     async reInit() {
         this.ready = false;
-        document.getElementById('st-label').innerText = "正在唤醒 1.5B 模型参数...";
-        document.getElementById('led-dot').className = "w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse";
+        document.getElementById('led').className = "w-2 h-2 rounded-full bg-orange-500 animate-pulse";
         try {
-            // 这里将模型升级为 Qwen2.5-1.5B-Instruct，参数量更大，逻辑更强，但仍能在现代 iPad 上运行
             this.engine = await webllm.CreateMLCEngine("Qwen2.5-1.5B-Instruct-q4f16_1-MLC", {
                 initProgressCallback: (p) => {
-                    document.getElementById('progress-bar').style.width = (p.progress * 100) + '%';
-                    document.getElementById('st-label').innerText = `同步 1.5B 算力进度: ${Math.round(p.progress * 100)}%`;
+                    document.getElementById('status').innerText = `神经连接中: ${Math.round(p.progress * 100)}%`;
                     if(p.progress === 1) {
                         this.ready = true;
-                        document.getElementById('led-dot').className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]";
-                        document.getElementById('st-label').innerText = "阮峻Gay 1.5B 已上线并处于易怒状态";
+                        document.getElementById('led').className = "w-2 h-2 rounded-full bg-green-500 shadow-sm";
+                        document.getElementById('status').innerText = "阮峻GAY 终极形态就绪";
                         document.getElementById('sbtn').disabled = false;
-                        setTimeout(() => document.getElementById('progress-bar').style.opacity = '0', 600);
+                        document.getElementById('nv-btn').disabled = false;
                     }
                 }
             });
-        } catch(e) { 
-            console.error(e);
-            document.getElementById('st-label').innerText = "GPU启动失败！请清理后台，并在设置>Safari>高级>功能标志中开启 WebGPU。";
-            document.getElementById('led-dot').className = "w-2.5 h-2.5 rounded-full bg-red-600";
-        }
+        } catch(e) { document.getElementById('status').innerText = "GPU ERROR"; }
     },
 
-    renderSessions() {
-        document.getElementById('u-display').innerText = this.user.name;
-        document.getElementById('u-pfp').innerText = this.user.name.charAt(0);
-        const list = document.getElementById('session-list');
-        list.innerHTML = '';
-        this.db.forEach(s => {
-            const el = document.createElement('div');
-            el.className = `tab ${this.activeId === s.id ? 'active' : ''}`;
-            el.innerText = s.title;
-            el.onclick = () => this.switchSession(s.id);
-            list.appendChild(el);
-        });
+    // --- 路由逻辑 ---
+    openTool(name) {
+        document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`panel-${name}`).classList.add('active');
+        document.getElementById(`tab-${name}`).classList.add('active');
     },
 
+    // --- 聊天逻辑 ---
     async send() {
         const inp = document.getElementById('minp');
         const val = inp.value.trim();
-        if(!val || this.busy || !this.ready) return;
-
-        if(!this.activeId) {
-            this.activeId = Date.now();
-            this.db.unshift({ id: this.activeId, title: val.substring(0, 10), msgs: [] });
-            this.renderSessions();
-        }
-
-        const current = this.db.find(s => s.id === this.activeId);
+        if(!val || !this.ready) return;
         this.appendMsg("me", val);
-        inp.value = ''; this.rsz(); this.busy = true;
-
+        inp.value = ''; this.rsz();
         const aiId = "ai-" + Date.now();
         this.appendMsg("ai", "", aiId);
-
-        try {
-            const history = [{role: "system", content: this.getPersona()}, ...current.msgs, {role: "user", content: val}];
-            const reply = await this.engine.chat.completions.create({ messages: history, stream: true });
-            let fullText = "";
-            for await (const chunk of reply) {
-                fullText += chunk.choices[0]?.delta?.content || "";
-                document.getElementById(aiId).innerHTML = marked.parse(fullText);
-                this.scroll();
-            }
-            current.msgs.push({role: "user", content: val}, {role: "assistant", content: fullText});
-            localStorage.setItem('rg_v36_db', JSON.stringify(this.db));
-        } finally { this.busy = false; }
+        const reply = await this.engine.chat.completions.create({
+            messages: [{role: "system", content: this.persona}, {role: "user", content: val}],
+            stream: true
+        });
+        let full = "";
+        for await (const chunk of reply) {
+            full += chunk.choices[0]?.delta?.content || "";
+            document.getElementById(aiId).innerHTML = marked.parse(full);
+            document.getElementById('scroller').scrollTo(0, 999999);
+        }
     },
 
     appendMsg(role, text, id = "") {
-        const isMe = role === "me";
-        const flow = document.getElementById('chat-view');
+        const v = document.getElementById('chat-view');
         const div = document.createElement('div');
-        div.className = "flex gap-6 msg-container";
-        div.innerHTML = `
-            <div class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-black ${isMe ? 'bg-gray-100 text-gray-500' : 'bg-black text-white shadow-lg'}">
-                ${isMe ? '用户' : 'RG'}
-            </div>
-            <div class="flex-1">
-                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">${isMe ? this.user.name : '阮峻Gay'}</p>
-                <div id="${id}" class="text-[17px] leading-[1.7] text-gray-800 prose prose-slate max-w-none font-medium">
-                    ${text ? marked.parse(text) : '<span class="animate-pulse text-gray-400">正在组织语言回怼你...</span>'}
-                </div>
-            </div>
-        `;
-        flow.appendChild(div);
-        this.scroll();
+        div.className = "flex gap-4";
+        div.innerHTML = `<div class="w-8 h-8 shrink-0 rounded-lg ${role==='me'?'bg-gray-100':'bg-black text-white'} flex items-center justify-center text-[10px] font-black">${role==='me'?'U':'RG'}</div>
+        <div class="flex-1"><p class="text-[9px] font-black text-gray-400 mb-1 uppercase">${role==='me'?this.user.name:'阮峻GAY'}</p><div id="${id}" class="text-sm leading-relaxed">${text?marked.parse(text):'...'}</div></div>`;
+        v.appendChild(div);
     },
 
-    switchSession(id) {
-        this.activeId = id;
-        document.getElementById('chat-view').innerHTML = '';
-        const s = this.db.find(x => x.id === id);
-        s.msgs.forEach(m => this.appendMsg(m.role === 'user' ? 'me' : 'ai', m.content));
-        this.renderSessions();
+    // --- 词典逻辑 ---
+    async lookup() {
+        const w = document.getElementById('dict-in').value;
+        const out = document.getElementById('dict-out');
+        out.innerHTML = `<div class="p-6 bg-gray-50 rounded-xl animate-pulse font-black italic">正在编造伪释义...</div>`;
+        const prompt = `你是阮峻Dict。如果是英文给中文离谱解释，如果是中文给英文离谱翻译。保持阮峻14岁自私烂梗人格。
+        格式：【解释】：(内容) 【例句】：(损内容)。输入：${w}`;
+        const reply = await this.engine.chat.completions.create({
+            messages: [{role:"system", content: prompt}, {role:"user", content:w}],
+            stream: true
+        });
+        let full = "";
+        for await (const chunk of reply) {
+            full += chunk.choices[0]?.delta?.content || "";
+            out.innerHTML = `<div class="p-6 bg-black text-white rounded-2xl font-bold whitespace-pre-wrap text-sm">${full}</div>`;
+        }
     },
 
-    newChat() { this.activeId = null; document.getElementById('chat-view').innerHTML = ''; this.renderSessions(); },
-    openSettings(s) { document.getElementById('settings-modal').style.display = s ? 'flex' : 'none'; },
-    saveUser() {
-        const n = document.getElementById('in-user-name').value.trim();
-        if(n) { this.user.name = n; localStorage.setItem('rg_v36_u', JSON.stringify(this.user)); location.reload(); }
+    // --- 计算器逻辑 ---
+    calNum(v) { document.getElementById('cal-display').innerText += v; },
+    calClear() { document.getElementById('cal-display').innerText = ''; },
+    calRes() {
+        document.getElementById('cal-display').innerText = Math.floor(Math.random()*99999);
+        document.getElementById('cal-msg').innerText = "算个屁，答案看心情";
     },
-    runCode(b64) {
-        document.getElementById('p-frame').srcdoc = decodeURIComponent(escape(atob(b64)));
-        this.togglePreview(true);
+
+    // --- 天气逻辑 ---
+    async getWeather() {
+        try {
+            const r = await fetch('https://wttr.in/?format=j1');
+            const d = await r.json();
+            const c = d.current_condition[0];
+            document.getElementById('we-temp').innerText = `${c.temp_C}°C`;
+            document.getElementById('we-desc').innerText = c.weatherDesc[0].value;
+            document.getElementById('we-comment').innerText = parseInt(c.temp_C)>25?"外面热得像曾俊伟的嘴脸，别出门。":"冷死了，新干线都冻僵了。";
+        } catch(e) {}
     },
-    togglePreview(s) {
-        document.getElementById('preview-panel').classList.toggle('open', s);
-        document.getElementById('pv-close').classList.toggle('hidden', !s);
+
+    // --- 评分逻辑 ---
+    rateGrade() {
+        const s = document.getElementById('gr-score').value;
+        const f = document.getElementById('gr-full').value;
+        const per = (s/f*100).toFixed(1);
+        document.getElementById('gr-o-sub').innerText = document.getElementById('gr-sub').value;
+        document.getElementById('gr-o-per').innerText = per + "%";
+        document.getElementById('gr-o-comment').innerText = per > 90 ? "卷王曾俊伟，捏扁你红牛！" : "恭喜你！地理18分预备役！";
+        document.getElementById('gr-res').classList.remove('hidden');
     },
-    rsz() { const i = document.getElementById('minp'); i.style.height='auto'; i.style.height=i.scrollHeight+'px'; },
-    scroll() { const v = document.getElementById('scroller'); v.scrollTo({top: v.scrollHeight, behavior: 'smooth'}); }
+
+    // --- 小说逻辑 ---
+    createBook() {
+        const t = prompt("书名:");
+        this.novelHistory = [{role:"system", content:`你写小说，书名《${t}》。主角阮峻，反派曾俊伟。阮峻一定要赢。`}];
+        document.getElementById('nv-view').innerHTML = `<h1 class="text-3xl font-black">${t}</h1>`;
+        this.writeChapter();
+    },
+    async writeChapter() {
+        const v = document.getElementById('nv-view');
+        const cIdx = v.querySelectorAll('.ch-body').length + 1;
+        const div = document.createElement('div');
+        div.innerHTML = `<h2 class="font-black text-lg">第 ${cIdx} 章</h2><div class="ch-body text-gray-600 text-sm leading-relaxed">...</div>`;
+        v.appendChild(div);
+        const reply = await this.engine.chat.completions.create({
+            messages: [...this.novelHistory, {role:"user", content:`写第${cIdx}章，多用烂梗。`}],
+            stream: true
+        });
+        let full = "";
+        for await (const chunk of reply) {
+            full += chunk.choices[0]?.delta?.content || "";
+            div.querySelector('.ch-body').innerText = full;
+        }
+        this.novelHistory.push({role:"assistant", content: full});
+    },
+
+    // --- 设置逻辑 ---
+    openSettings(s) { document.getElementById('settings-modal').style.display = s?'flex':'none'; },
+    saveSettings() {
+        localStorage.setItem('rg_u', JSON.stringify({name: document.getElementById('in-name').value}));
+        localStorage.setItem('rg_p', document.getElementById('in-persona').value);
+        location.reload();
+    },
+    rsz() { const i = document.getElementById('minp'); i.style.height='auto'; i.style.height=i.scrollHeight+'px'; }
 };
 
 window.App = App;
