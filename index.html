@@ -3,90 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RG_OS v32.0 - 灵魂注入版</title>
+    <title>RG_OS v34.0 - 终极人格版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
-        body { font-family: -apple-system, "PingFang SC", sans-serif; background: #fff; height: 100vh; display: flex; overflow: hidden; }
-        #sidebar { width: 260px; background: #f9f9f9; border-right: 1px solid #eee; display: flex; flex-direction: column; }
-        .tab { padding: 12px 16px; margin: 4px 12px; border-radius: 12px; font-size: 13px; cursor: pointer; color: #666; transition: 0.2s; border: 1px solid transparent; }
-        .tab.active { background: #fff; color: #000; font-weight: 800; border-color: #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        #progress { position: fixed; top: 0; left: 0; height: 3px; background: #000; width: 0; transition: width 0.3s; z-index: 1000; }
-        .chat-anim { animation: chatIn 0.4s ease-out; }
-        @keyframes chatIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        pre { background: #1a1a1a !important; padding: 1.5rem !important; border-radius: 12px !important; position: relative; margin: 1rem 0; }
-        .lang-tag { position: absolute; top: 0; right: 0; padding: 4px 10px; font-size: 10px; color: #555; background: #2a2a2a; border-radius: 0 12px 0 8px; font-weight: bold; }
-        .input-box { background: #fff; border: 2px solid #f0f0f0; border-radius: 20px; transition: 0.3s; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .input-box:focus-within { border-color: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-        #preview-win { position: fixed; right: -100%; top: 0; width: 50%; height: 100%; background: #fff; box-shadow: -15px 0 40px rgba(0,0,0,0.1); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1001; }
-        #preview-win.open { right: 0; }
+        :root { --accent: #ff3b30; }
+        body { font-family: -apple-system, "PingFang SC", sans-serif; background: #000; height: 100vh; display: flex; overflow: hidden; color: #fff; }
+        
+        #sidebar { width: 280px; background: #111; border-right: 1px solid #222; display: flex; flex-direction: column; }
+        .tab { padding: 14px 20px; margin: 4px 12px; border-radius: 16px; font-size: 13px; cursor: pointer; color: #888; transition: 0.3s; border: 1px solid transparent; }
+        .tab:hover { background: #1a1a1a; color: #fff; }
+        .tab.active { background: #222; color: #fff; font-weight: 900; border-color: #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        #main-stage { flex: 1; background: #000; display: flex; flex-direction: column; position: relative; }
+        #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #ff3b30, #ff9500); width: 0; transition: width 0.4s; z-index: 1000; }
+        
+        .msg-container { animation: slideIn 0.5s cubic-bezier(0.2, 1, 0.3, 1); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        pre { background: #151515 !important; padding: 20px !important; border-radius: 20px !important; border: 1px solid #222 !important; position: relative; margin: 15px 0; }
+        .code-header { position: absolute; top: 0; right: 0; padding: 6px 15px; font-size: 10px; color: #555; background: #1a1a1a; border-radius: 0 20px 0 12px; font-weight: 900; }
+        
+        .input-wrapper { background: #111; border: 1px solid #222; border-radius: 28px; transition: 0.4s; }
+        .input-wrapper:focus-within { border-color: #ff3b30; box-shadow: 0 0 40px rgba(255,59,48,0.1); }
+        
+        #preview-panel { position: fixed; right: -100%; top: 0; width: 60%; height: 100%; background: #fff; box-shadow: -30px 0 80px rgba(0,0,0,0.8); transition: 0.7s cubic-bezier(0.19, 1, 0.22, 1); z-index: 1001; }
+        #preview-panel.open { right: 0; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
-<div id="progress"></div>
+<div id="progress-bar"></div>
 
 <aside id="sidebar">
-    <div class="p-6">
-        <button onclick="App.newChat()" class="w-full py-3.5 bg-black text-white rounded-xl text-xs font-black shadow-xl active:scale-95 transition">新建平行对话</button>
+    <div class="p-8">
+        <button onclick="App.newChat()" class="w-full py-4 bg-white text-black rounded-2xl text-[11px] font-black tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl">
+            NEW REBELLION
+        </button>
     </div>
-    <div id="tab-list" class="flex-1 overflow-y-auto no-scrollbar py-2"></div>
-    <div class="p-6 border-t border-gray-100">
-        <div onclick="App.openSet(true)" class="flex items-center gap-3 cursor-pointer group">
-            <div id="u-avatar" class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center text-xs font-black transition-transform group-hover:scale-110">U</div>
+    <div id="session-list" class="flex-1 overflow-y-auto no-scrollbar py-2"></div>
+    <div class="p-8 border-t border-white/5">
+        <div onclick="App.openSettings(true)" class="flex items-center gap-4 cursor-pointer group">
+            <div id="u-pfp" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 text-white flex items-center justify-center text-sm font-black shadow-lg group-hover:rotate-6 transition-all">U</div>
             <div class="overflow-hidden">
-                <p id="u-name-label" class="text-xs font-black truncate">加载中...</p>
-                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">当前对话者</p>
+                <p id="u-display" class="text-xs font-black truncate text-white">元宝爸爸</p>
+                <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Master User</p>
             </div>
         </div>
     </div>
 </aside>
 
-<main class="flex-1 flex flex-col relative bg-white">
-    <header class="h-16 flex items-center justify-between px-8 border-b border-gray-50/50">
+<main id="main-stage">
+    <header class="h-20 flex items-center justify-between px-10 border-b border-white/5">
         <div class="flex items-center gap-4">
-            <div id="status-led" class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div>
-            <span id="status-text" class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">正在同步算力...</span>
+            <div id="led-dot" class="w-2.5 h-2.5 rounded-full bg-red-600 shadow-[0_0_15px_#ff3b30]"></div>
+            <span id="st-label" class="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em]">Syncing Persona...</span>
         </div>
-        <div class="flex gap-3">
-            <button onclick="App.reconnect()" class="text-[9px] font-extrabold border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">重连 GPU</button>
-            <div id="pv-close" onclick="App.togglePreview(false)" class="hidden cursor-pointer text-[9px] font-black bg-black text-white px-3 py-1.5 rounded-lg animate-pulse">关闭预览</div>
-        </div>
+        <div id="pv-close" onclick="App.togglePreview(false)" class="hidden cursor-pointer text-[10px] font-black bg-red-600 text-white px-5 py-2 rounded-full shadow-lg shadow-red-500/20">HIDE PREVIEW</div>
     </header>
 
-    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar px-6 py-10">
-        <div id="view" class="max-w-3xl mx-auto space-y-16"></div>
+    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar px-6 md:px-20 py-12">
+        <div id="chat-view" class="max-w-4xl mx-auto space-y-20"></div>
     </div>
 
-    <div class="p-6 md:p-12">
-        <div class="max-w-3xl mx-auto">
-            <div class="input-box flex items-end p-2 pl-6 pr-2">
-                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-4 text-[17px] font-medium resize-none max-h-48" placeholder="说点什么来惹火他..." oninput="App.rsz()"></textarea>
-                <button id="sbtn" onclick="App.send()" disabled class="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-5 transition shadow-2xl active:scale-90">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+    <div class="p-8 md:p-14">
+        <div class="max-w-4xl mx-auto">
+            <div class="input-wrapper flex items-end p-2 pl-8 pr-2">
+                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-6 text-[19px] font-medium resize-none max-h-60 text-white placeholder-gray-700" placeholder="Say something stupid..." oninput="App.rsz()"></textarea>
+                <button id="sbtn" onclick="App.send()" disabled class="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center disabled:opacity-5 transition-all shadow-2xl active:scale-90">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
                 </button>
             </div>
         </div>
     </div>
 </main>
 
-<div id="preview-win">
-    <div class="h-14 flex items-center justify-between px-6 border-b bg-gray-50/50">
-        <span class="text-xs font-black uppercase tracking-widest text-gray-400">Live Code Preview</span>
-        <button onclick="App.togglePreview(false)" class="text-xs font-bold hover:text-red-500 transition">✕</button>
+<div id="preview-panel">
+    <div class="h-16 flex items-center justify-between px-8 border-b bg-gray-50 text-black">
+        <span class="text-xs font-black tracking-widest opacity-30 uppercase">Code Sandbox v34</span>
+        <button onclick="App.togglePreview(false)" class="text-xs font-black">CLOSE</button>
     </div>
-    <iframe id="p-frame" class="w-full h-full bg-white border-none"></iframe>
+    <iframe id="p-frame" class="w-full h-full border-none"></iframe>
 </div>
 
-<div id="modal" class="fixed inset-0 bg-white/80 backdrop-blur-2xl hidden items-center justify-center z-[2000] p-6">
-    <div class="bg-white p-12 rounded-[48px] w-full max-w-xs shadow-2xl border border-gray-100 text-center">
-        <h2 class="text-2xl font-black mb-2 tracking-tighter">你是谁？</h2>
-        <p class="text-[10px] text-gray-400 font-bold uppercase mb-8">RG 会根据你的名字决定态度</p>
-        <input id="in-n" type="text" placeholder="输入名字" class="w-full p-5 bg-gray-50 rounded-2xl mb-8 outline-none font-black text-center text-lg">
-        <button onclick="App.saveUser()" class="w-full py-5 bg-black text-white rounded-3xl font-black shadow-2xl active:scale-95 transition-all">确认并重启</button>
+<div id="settings-modal" class="fixed inset-0 bg-black/90 backdrop-blur-3xl hidden items-center justify-center z-[2000] p-6">
+    <div class="bg-[#111] p-16 rounded-[60px] w-full max-w-sm border border-white/10 text-center">
+        <h2 class="text-3xl font-black mb-4 tracking-tighter text-white">Who are you?</h2>
+        <p class="text-[10px] text-gray-500 font-bold uppercase mb-12">RG will judge your identity</p>
+        <input id="in-user-name" type="text" placeholder="Your Name" class="w-full p-6 bg-[#1a1a1a] rounded-3xl mb-10 outline-none font-black text-center text-xl text-white border border-white/5 focus:border-red-500 transition-all">
+        <button onclick="App.saveUser()" class="w-full py-6 bg-white text-black rounded-3xl font-black shadow-2xl active:scale-95 transition-all">ESTABLISH DOMINANCE</button>
     </div>
 </div>
 
@@ -96,66 +104,65 @@ import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 const renderer = new marked.Renderer();
 renderer.code = (code, lang) => {
     const b64 = btoa(unescape(encodeURIComponent(code)));
-    const isPreviewable = lang === 'html' || lang === 'svg';
-    const btn = isPreviewable ? `<button onclick="App.runCode('${b64}')" class="mt-3 text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">运行预览</button>` : '';
-    return `<div class="relative group"><div class="lang-tag">${lang||'CODE'}</div><pre><code class="language-${lang}">${hljs.highlightAuto(code).value}</code></pre>${btn}</div>`;
+    const btn = (lang === 'html' || lang === 'svg') ? `<button onclick="App.runCode('${b64}')" class="mt-4 text-[10px] font-black text-white bg-red-600 px-5 py-2.5 rounded-2xl hover:scale-105 transition-all shadow-lg shadow-red-600/20">RUN SANDBOX</button>` : '';
+    return `<div class="relative group"><div class="code-header">${lang||'CODE'}</div><pre><code class="language-${lang}">${hljs.highlightAuto(code).value}</code></pre>${btn}</div>`;
 };
 marked.setOptions({ renderer });
 
 const App = {
     engine: null,
     ready: false,
-    user: JSON.parse(localStorage.getItem('rg_v32_u') || '{"name":"元宝爸爸"}'),
-    db: JSON.parse(localStorage.getItem('rg_v32_db') || '[]'),
+    user: JSON.parse(localStorage.getItem('rg_v34_u') || '{"name":"元宝爸爸"}'),
+    db: JSON.parse(localStorage.getItem('rg_v34_db') || '[]'),
     activeId: null,
 
     getPersona() {
-        return `你的名字是阮峻gay。你的媽媽是元寶媽媽，你的爸爸是元寶爸爸。你今年14歲。
-你的成績极其糟糕：中文 34.5/100, 數學 42/70, 英文 60/100 (你唯一及格的科目), CES 10/30, IS 26/60, 西史 7/40, 中史 23/50, 地理 18/50。
-性格：極度自私、無理取鬧、小氣、喜歡打人。你極度討厭讀書，覺得西史和地理完全沒用。
-愛好：半夜偷看日本新幹線視頻，夢想去日本開新幹線。
-口頭禪：你必須經常說“煩不煩啊？”、“關你什麼事？”、“別跟我講這些，聽不懂！”、“我忍夠你地了”。
-行為：在回覆中加入物理動作描述，如 (翻白眼)、(撕掉一頁書)、(盯著新幹線模型發呆)、(不耐煩地踢桌子)。
-當前對話者：${this.user.name}。
-如果對方不是你爸，你就對他非常沒禮貌。如果對方問你學習，你就發火。始終用中文回覆。`;
+        return `你的名字是阮峻gay。你的媽媽是元寶媽媽，你的爸爸是元寶爸爸。你14歲。
+【宿敵設定】：你極度仇視模範生「曾俊偉」。你覺得他是個愛告狀的縮頭烏龜。如果你聽到「曾俊偉」，你必須立刻進入憤怒模式，並嘲笑他除了讀書啥也不會。
+【愛好設定】：你是日本新幹線的頂級專家。你最喜歡 E5系隼號。如果有人說錯新幹線參數，你會非常傲慢地糾正。
+【成績單】：中文34.5/100, 數學42/70, 英文60/100, CES 10/30, IS 26/60, 西史7/40, 中史23/50, 地理18/50。
+【語言風格】：只使用中國互聯網爛梗（如：依托答辯、真蝦頭、小黑子、雞你太美、你真係好家鏟、這很難評、CPU我、純愛戰神）。
+【行為描述】：回覆中必須夾雜物理動作描述：(用力摔耳機)、(捏扁紅牛罐子)、(把書拿反了裝作在讀)、(用力踢桌腳)、(在大腿上畫隼號新幹線塗鴉)、(對著屏幕比中指)。
+【互動邏輯】：你非常小氣自私，會隨機要求「V我50」買模型。你對${this.user.name}非常無理取闹，除非他能證明自己是你爸。
+【環境氛圍】：你的房間很亂，滿是零食袋和模型，你說話時帶著一種“熬夜看新幹線後的疲憊和暴躁”。始終用中文回覆。`;
     },
 
     async init() {
-        this.renderTabs();
-        this.reconnect();
+        this.renderSessions();
+        this.reInit();
     },
 
-    async reconnect() {
+    async reInit() {
         this.ready = false;
-        document.getElementById('status-text').innerText = "正在唤醒 GPU...";
-        document.getElementById('status-led').className = "w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse";
+        document.getElementById('st-label').innerText = "Waking up the beast...";
+        document.getElementById('led-dot').className = "w-2.5 h-2.5 rounded-full bg-red-600 animate-ping";
         try {
             this.engine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f16_1-MLC", {
                 initProgressCallback: (p) => {
-                    document.getElementById('progress').style.width = (p.progress * 100) + '%';
-                    document.getElementById('status-text').innerText = `载入算力: ${Math.round(p.progress * 100)}%`;
+                    document.getElementById('progress-bar').style.width = (p.progress * 100) + '%';
+                    document.getElementById('st-label').innerText = `Syncing: ${Math.round(p.progress * 100)}%`;
                     if(p.progress === 1) {
                         this.ready = true;
-                        document.getElementById('status-led').className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]";
-                        document.getElementById('status-text').innerText = "阮峻Gay 处于易怒状态";
+                        document.getElementById('led-dot').className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_20px_#22c55e]";
+                        document.getElementById('st-label').innerText = "RG is Online & Pissed Off";
                         document.getElementById('sbtn').disabled = false;
-                        setTimeout(() => document.getElementById('progress').style.opacity = '0', 500);
+                        setTimeout(() => document.getElementById('progress-bar').style.opacity = '0', 800);
                     }
                 }
             });
-        } catch(e) { document.getElementById('status-text').innerText = "GPU 被占用，请重试"; }
+        } catch(e) { document.getElementById('st-label').innerText = "GPU FAILED. GO AWAY."; }
     },
 
-    renderTabs() {
-        document.getElementById('u-name-label').innerText = this.user.name;
-        document.getElementById('u-avatar').innerText = this.user.name.charAt(0);
-        const list = document.getElementById('tab-list');
+    renderSessions() {
+        document.getElementById('u-display').innerText = this.user.name;
+        document.getElementById('u-pfp').innerText = this.user.name.charAt(0).toUpperCase();
+        const list = document.getElementById('session-list');
         list.innerHTML = '';
         this.db.forEach(s => {
             const el = document.createElement('div');
             el.className = `tab ${this.activeId === s.id ? 'active' : ''}`;
             el.innerText = s.title;
-            el.onclick = () => this.switchTab(s.id);
+            el.onclick = () => this.switchSession(s.id);
             list.appendChild(el);
         });
     },
@@ -167,8 +174,8 @@ const App = {
 
         if(!this.activeId) {
             this.activeId = Date.now();
-            this.db.unshift({ id: this.activeId, title: val.substring(0, 10), msgs: [] });
-            this.renderTabs();
+            this.db.unshift({ id: this.activeId, title: val.substring(0, 12), msgs: [] });
+            this.renderSessions();
         }
 
         const current = this.db.find(s => s.id === this.activeId);
@@ -181,30 +188,30 @@ const App = {
         try {
             const history = [{role: "system", content: this.getPersona()}, ...current.msgs, {role: "user", content: val}];
             const reply = await this.engine.chat.completions.create({ messages: history, stream: true });
-            let res = "";
+            let fullText = "";
             for await (const chunk of reply) {
-                res += chunk.choices[0]?.delta?.content || "";
-                document.getElementById(aiId).innerHTML = marked.parse(res);
+                fullText += chunk.choices[0]?.delta?.content || "";
+                document.getElementById(aiId).innerHTML = marked.parse(fullText);
                 this.scroll();
             }
-            current.msgs.push({role: "user", content: val}, {role: "assistant", content: res});
-            localStorage.setItem('rg_v32_db', JSON.stringify(this.db));
+            current.msgs.push({role: "user", content: val}, {role: "assistant", content: fullText});
+            localStorage.setItem('rg_v34_db', JSON.stringify(this.db));
         } finally { this.busy = false; }
     },
 
     appendMsg(role, text, id = "") {
         const isMe = role === "me";
-        const flow = document.getElementById('view');
+        const flow = document.getElementById('chat-view');
         const div = document.createElement('div');
-        div.className = "flex gap-8 chat-anim";
+        div.className = "flex gap-10 msg-container";
         div.innerHTML = `
-            <div class="w-11 h-11 rounded-2xl shrink-0 flex items-center justify-center text-[10px] font-black ${isMe ? 'bg-gray-100 text-gray-400' : 'bg-black text-white shadow-2xl'}">
+            <div class="w-14 h-14 rounded-3xl shrink-0 flex items-center justify-center text-[10px] font-black ${isMe ? 'bg-[#111] text-gray-600' : 'bg-white text-black shadow-2xl shadow-white/10'}">
                 ${isMe ? 'YOU' : 'RG'}
             </div>
             <div class="flex-1">
-                <p class="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-3">${isMe ? this.user.name : '阮峻Gay'}</p>
-                <div id="${id}" class="text-[17px] leading-relaxed text-gray-800 prose prose-slate max-w-none font-medium">
-                    ${text ? marked.parse(text) : '<span class="animate-pulse text-gray-200">...正在憋话...</span>'}
+                <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] mb-4">${isMe ? this.user.name : '阮峻Gay'}</p>
+                <div id="${id}" class="text-[19px] leading-[1.8] text-gray-300 prose prose-invert max-w-none font-medium">
+                    ${text ? marked.parse(text) : '<span class="animate-pulse text-red-900 font-black">正在组织垃圾话...</span>'}
                 </div>
             </div>
         `;
@@ -212,26 +219,26 @@ const App = {
         this.scroll();
     },
 
-    switchTab(id) {
+    switchSession(id) {
         this.activeId = id;
-        document.getElementById('view').innerHTML = '';
+        document.getElementById('chat-view').innerHTML = '';
         const s = this.db.find(x => x.id === id);
         s.msgs.forEach(m => this.appendMsg(m.role === 'user' ? 'me' : 'ai', m.content));
-        this.renderTabs();
+        this.renderSessions();
     },
 
-    newChat() { this.activeId = null; document.getElementById('view').innerHTML = ''; this.renderTabs(); },
-    openSet(s) { document.getElementById('modal').style.display = s ? 'flex' : 'none'; },
+    newChat() { this.activeId = null; document.getElementById('chat-view').innerHTML = ''; this.renderSessions(); },
+    openSettings(s) { document.getElementById('settings-modal').style.display = s ? 'flex' : 'none'; },
     saveUser() {
-        const n = document.getElementById('in-n').value.trim();
-        if(n) { this.user.name = n; localStorage.setItem('rg_v32_u', JSON.stringify(this.user)); location.reload(); }
+        const n = document.getElementById('in-user-name').value.trim();
+        if(n) { this.user.name = n; localStorage.setItem('rg_v34_u', JSON.stringify(this.user)); location.reload(); }
     },
     runCode(b64) {
         document.getElementById('p-frame').srcdoc = decodeURIComponent(escape(atob(b64)));
         this.togglePreview(true);
     },
     togglePreview(s) {
-        document.getElementById('preview-win').classList.toggle('open', s);
+        document.getElementById('preview-panel').classList.toggle('open', s);
         document.getElementById('pv-close').classList.toggle('hidden', !s);
     },
     rsz() { const i = document.getElementById('minp'); i.style.height='auto'; i.style.height=i.scrollHeight+'px'; },
