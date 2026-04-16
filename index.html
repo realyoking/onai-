@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RG_OS v41.0 - 全功能集成版</title>
+    <title>RG_OS v42.0 - 终极修复版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -11,15 +11,17 @@
         #sidebar { width: 280px; background: #fff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; z-index: 50; }
         .tab { padding: 12px 16px; margin: 4px 12px; border-radius: 12px; font-size: 13px; cursor: pointer; color: #4b5563; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 600; }
         .tab:hover { background: #f3f4f6; }
-        .tab.active { background: #000; color: #fff; }
-        #main-stage { flex: 1; background: #fff; position: relative; display: flex; flex-direction: column; }
-        .tool-panel { position: absolute; inset: 0; background: #fff; z-index: 40; display: none; flex-direction: column; }
-        .tool-panel.active { display: flex; }
+        .tab.active { background: #000 !important; color: #fff !important; }
+        #main-stage { flex: 1; background: #fff; position: relative; }
+        /* 修复面板显示逻辑 */
+        .tool-panel { display: none; height: 100%; width: 100%; flex-direction: column; overflow: hidden; }
+        .tool-panel.active { display: flex !important; }
+        
         .input-wrapper { background: #f3f4f6; border: 2px solid transparent; border-radius: 24px; transition: 0.3s; }
         .input-wrapper:focus-within { border-color: #000; background: #fff; }
         .cal-btn { height: 50px; border-radius: 12px; font-weight: 900; background: #f3f4f6; transition: 0.1s; }
         .cal-btn:active { transform: scale(0.95); background: #e5e7eb; }
-        pre { background: #1a1a1a !important; color: #fff; padding: 15px; border-radius: 12px; overflow-x: auto; }
+        .card { background: #f9fafb; border: 1px solid #eee; border-radius: 20px; padding: 20px; }
     </style>
 </head>
 <body>
@@ -27,40 +29,25 @@
 <aside id="sidebar">
     <div class="p-6 text-xl font-black italic tracking-tighter flex items-center gap-2">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        RG_OS v41
+        RG_OS v42
     </div>
     
-    <nav class="flex-1 overflow-y-auto px-3 space-y-1">
-        <div onclick="App.openTool('chat')" id="tab-chat" class="tab active">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 阮峻对话
-        </div>
-        
-        <p class="px-4 py-2 mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">核心工具</p>
-        <div onclick="App.openTool('cal')" id="tab-cal" class="tab">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><path d="M16 14v4M12 14v4M8 14v4M12 10h.01M8 10h.01M16 10h.01"/></svg> 阮峻Cal
-        </div>
-        <div onclick="App.openTool('dict')" id="tab-dict" class="tab">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> 阮峻Dict
-        </div>
-        <div onclick="App.openTool('grade')" id="tab-grade" class="tab">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> 成绩评分
-        </div>
-        
-        <p class="px-4 py-2 mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">生产力(无用)</p>
-        <div onclick="App.openTool('weather')" id="tab-weather" class="tab">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.9 10A5 5 0 1 1 11 7c2.1 0 3.1.8 4 2"/><path d="M17 21v-2"/><path d="M11 21v-2"/><path d="M15 21v-2"/></svg> 阮峻Weather
-        </div>
-        <div onclick="App.openTool('novel')" id="tab-novel" class="tab">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 阮峻Novel
-        </div>
+    <nav class="flex-1 overflow-y-auto px-3 space-y-1" id="nav-list">
+        <div onclick="App.openTool('chat')" id="tab-chat" class="tab active">阮峻对话</div>
+        <div onclick="App.openTool('cal')" id="tab-cal" class="tab">阮峻Cal</div>
+        <div onclick="App.openTool('dict')" id="tab-dict" class="tab">阮峻Dict</div>
+        <div onclick="App.openTool('grade')" id="tab-grade" class="tab">成绩评分</div>
+        <div onclick="App.openTool('weather')" id="tab-weather" class="tab">实时天气</div>
+        <div onclick="App.openTool('novel')" id="tab-novel" class="tab">阮峻Novel</div>
+        <div onclick="App.openTool('news')" id="tab-news" class="tab text-red-500">阮峻News 🔥</div>
     </nav>
 
     <div class="p-4 border-t">
-        <button onclick="App.openSettings(true)" class="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl transition text-left">
-            <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black">⚙️</div>
-            <div class="overflow-hidden">
-                <p id="u-display" class="text-xs font-black truncate">加载中...</p>
-                <p class="text-[9px] text-gray-400 font-bold uppercase">Settings</p>
+        <button onclick="App.openSettings(true)" class="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl transition">
+            <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-[10px]">⚙️</div>
+            <div class="text-left">
+                <p id="u-display" class="text-xs font-black">加载中...</p>
+                <p class="text-[9px] text-gray-400 font-bold uppercase">System Config</p>
             </div>
         </button>
     </div>
@@ -70,25 +57,26 @@
     <div id="panel-chat" class="tool-panel active">
         <header class="h-14 border-b flex items-center px-6 gap-3">
             <div id="led" class="w-2 h-2 rounded-full bg-red-500"></div>
-            <span id="status" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">初始化算力...</span>
+            <span id="status" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">初始化中...</span>
         </header>
         <div id="scroller" class="flex-1 overflow-y-auto p-6">
-            <div id="chat-view" class="max-w-2xl mx-auto space-y-8"></div>
+            <div id="chat-view" class="max-w-2xl mx-auto space-y-6"></div>
         </div>
         <div class="p-6">
             <div class="max-w-2xl mx-auto input-wrapper flex items-end p-2 pl-5 pr-2">
-                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-3 text-base font-medium resize-none" placeholder="输入..." oninput="App.rsz()"></textarea>
-                <button id="sbtn" onclick="App.send()" disabled class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-20 active:scale-90 transition">
+                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-3 text-base" placeholder="说点好听的..." oninput="App.rsz()"></textarea>
+                <button id="sbtn" onclick="App.send()" disabled class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="panel-cal" class="tool-panel">
-        <div class="flex-1 flex items-center justify-center bg-gray-50 p-6">
-            <div class="bg-white p-6 rounded-[32px] w-full max-w-xs shadow-xl">
-                <div id="cal-display" class="bg-gray-100 p-6 rounded-2xl mb-4 text-right text-3xl font-black h-20 flex items-center justify-end">0</div>
+    <div id="panel-cal" class="tool-panel bg-gray-50">
+        <header class="p-6 font-black text-lg border-b bg-white">阮峻专用乱算器</header>
+        <div class="flex-1 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-[32px] w-80 shadow-xl border">
+                <div id="cal-display" class="bg-gray-100 p-6 rounded-2xl mb-4 text-right text-3xl font-black h-20 flex items-center justify-end overflow-hidden">0</div>
                 <div class="grid grid-cols-4 gap-2">
                     <button onclick="App.calClear()" class="cal-btn text-red-500">C</button>
                     <button onclick="App.calNum('/')" class="cal-btn">/</button>
@@ -102,70 +90,84 @@
                     <button onclick="App.calNum('5')" class="cal-btn">5</button>
                     <button onclick="App.calNum('6')" class="cal-btn">6</button>
                     <button onclick="App.calNum('.')" class="cal-btn">.</button>
-                    <button onclick="App.calRes()" class="cal-btn bg-black text-white col-span-4">=</button>
+                    <button onclick="App.calNum('1')" class="cal-btn">1</button>
+                    <button onclick="App.calNum('2')" class="cal-btn">2</button>
+                    <button onclick="App.calNum('3')" class="cal-btn">3</button>
+                    <button onclick="App.calNum('0')" class="cal-btn">0</button>
+                    <button onclick="App.calRes()" class="cal-btn bg-black text-white col-span-4">计算（全凭运气）</button>
                 </div>
-                <p id="cal-msg" class="mt-4 text-center text-[10px] text-red-500 font-bold h-4"></p>
             </div>
         </div>
     </div>
 
     <div id="panel-dict" class="tool-panel">
+        <header class="p-6 font-black text-lg border-b">中英互怼翻译官</header>
         <div class="p-10 max-w-xl mx-auto w-full">
-            <h2 class="text-2xl font-black mb-8 italic underline">阮峻Dict (中英互怼版)</h2>
-            <div class="relative mb-8">
-                <input id="dict-in" class="w-full p-4 bg-gray-100 rounded-xl font-bold border-none outline-none focus:ring-2 ring-black" placeholder="输入词汇..." onkeydown="if(event.key==='Enter') App.lookup()">
-                <button onclick="App.lookup()" class="absolute right-2 top-2 w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center">GO</button>
+            <div class="flex gap-2 mb-8">
+                <input id="dict-in" class="flex-1 p-4 bg-gray-100 rounded-xl font-bold outline-none" placeholder="输入单词或句子...">
+                <button onclick="App.lookup()" class="px-6 bg-black text-white rounded-xl font-black">翻译</button>
             </div>
-            <div id="dict-out" class="space-y-4"></div>
+            <div id="dict-out" class="card min-h-[100px] flex items-center justify-center text-gray-300 italic">等待输入...</div>
         </div>
     </div>
 
-    <div id="panel-grade" class="tool-panel p-10">
-        <div class="max-w-md mx-auto space-y-6">
-            <h2 class="text-2xl font-black mb-4">成绩阴阳怪气仪</h2>
-            <input id="gr-sub" class="w-full" placeholder="科目">
-            <div class="grid grid-cols-2 gap-4">
-                <input id="gr-score" type="number" placeholder="得分">
-                <input id="gr-full" type="number" placeholder="满分">
+    <div id="panel-grade" class="tool-panel">
+        <header class="p-6 font-black text-lg border-b">成绩压力感应器</header>
+        <div class="p-10 max-w-md mx-auto w-full space-y-6">
+            <input id="gr-sub" class="w-full p-4 bg-gray-50 rounded-xl" placeholder="科目名称">
+            <div class="flex gap-4">
+                <input id="gr-score" type="number" class="w-1/2 p-4 bg-gray-50 rounded-xl" placeholder="你的分">
+                <input id="gr-full" type="number" class="w-1/2 p-4 bg-gray-50 rounded-xl" placeholder="满分">
             </div>
-            <button onclick="App.rateGrade()" class="w-full py-4 bg-black text-white rounded-xl font-black">提交审判</button>
-            <div id="gr-res" class="p-6 bg-red-50 rounded-2xl hidden">
-                <div class="flex justify-between font-black mb-2"><span id="gr-o-sub"></span> <span id="gr-o-per"></span></div>
-                <p id="gr-o-comment" class="text-sm font-bold text-red-600 italic"></p>
+            <button onclick="App.rateGrade()" class="w-full py-4 bg-black text-white rounded-xl font-black shadow-lg">生成刻薄报告</button>
+            <div id="gr-res" class="hidden card bg-red-50 border-red-100">
+                <div class="flex justify-between font-black text-xl mb-2"><span id="gr-o-sub"></span> <span id="gr-o-per"></span></div>
+                <p id="gr-o-comment" class="text-red-600 font-bold italic"></p>
             </div>
         </div>
     </div>
 
-    <div id="panel-weather" class="tool-panel flex items-center justify-center text-center">
-        <div id="we-box" class="space-y-4">
-            <div id="we-temp" class="text-7xl font-black">--°C</div>
-            <div id="we-desc" class="text-xl font-bold text-gray-400">正在同步地球坐标...</div>
-            <div id="we-comment" class="max-w-xs mx-auto p-4 bg-gray-50 rounded-xl text-xs font-bold italic"></div>
+    <div id="panel-weather" class="tool-panel">
+        <header class="p-6 font-black text-lg border-b">真实地球环境监控</header>
+        <div class="flex-1 flex items-center justify-center text-center">
+            <div id="we-box" class="space-y-4">
+                <div id="we-temp" class="text-8xl font-black tracking-tighter">--°C</div>
+                <div id="we-desc" class="text-2xl font-bold text-gray-400">正在嗅探空气...</div>
+                <div id="we-comment" class="max-w-xs mx-auto p-6 bg-yellow-50 rounded-3xl border-2 border-yellow-100 text-sm font-bold italic"></div>
+                <button onclick="App.getWeather()" class="text-[10px] font-black underline uppercase">刷新天气数据</button>
+            </div>
         </div>
     </div>
 
     <div id="panel-novel" class="tool-panel">
-        <header class="p-6 border-b flex justify-between">
-            <span class="font-black">阮峻Novel 连载中</span>
-            <button onclick="App.createBook()" class="text-[10px] font-black underline">开新坑</button>
+        <header class="p-6 border-b flex justify-between items-center bg-white sticky top-0">
+            <span class="font-black text-lg">阮峻Novel 连载中心</span>
+            <button onclick="App.createBook()" class="px-4 py-2 border-2 border-black rounded-full text-[10px] font-black">新开长篇</button>
         </header>
-        <div id="nv-view" class="flex-1 overflow-y-auto p-10 space-y-10 prose max-w-none"></div>
-        <div class="p-6 border-t">
-            <button id="nv-btn" onclick="App.writeChapter()" disabled class="w-full py-4 border-2 border-black rounded-xl font-black">生成下一章</button>
+        <div id="nv-view" class="flex-1 overflow-y-auto p-10 space-y-12 max-w-3xl mx-auto"></div>
+        <div class="p-6 border-t bg-gray-50">
+            <button id="nv-btn" onclick="App.writeChapter()" disabled class="w-full py-4 bg-black text-white rounded-2xl font-black">续写下一章节</button>
+        </div>
+    </div>
+
+    <div id="panel-news" class="tool-panel">
+        <header class="p-6 font-black text-lg border-b bg-red-600 text-white">阮峻每日头条 (Fake News)</header>
+        <div class="p-8 flex-1 overflow-y-auto space-y-6" id="news-container">
+            <button onclick="App.genNews()" class="w-full py-10 border-4 border-dashed rounded-3xl text-gray-400 font-black hover:border-black hover:text-black transition">点击获取最新的曾俊伟黑料...</button>
         </div>
     </div>
 </main>
 
-<div id="settings-modal" class="fixed inset-0 bg-white/95 backdrop-blur-xl hidden z-[100] items-center justify-center p-6">
-    <div class="bg-white p-8 rounded-[40px] shadow-2xl w-full max-w-lg border">
-        <h2 class="text-2xl font-black mb-6">OS 底层协议修改</h2>
+<div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md hidden z-[100] items-center justify-center p-6">
+    <div class="bg-white p-8 rounded-[40px] w-full max-w-lg">
+        <h2 class="text-2xl font-black mb-6">OS 底层配置</h2>
         <div class="space-y-4">
-            <input id="in-name" class="w-full" placeholder="你的名字">
-            <textarea id="in-persona" rows="6" class="w-full font-mono text-xs" placeholder="AI人格设置"></textarea>
+            <input id="in-name" class="w-full p-4 bg-gray-100 rounded-xl font-bold" placeholder="你的名字">
+            <textarea id="in-persona" rows="5" class="w-full p-4 bg-gray-100 rounded-xl font-mono text-xs" placeholder="人格协议"></textarea>
         </div>
         <div class="mt-8 flex gap-3">
-            <button onclick="App.saveSettings()" class="flex-1 py-4 bg-black text-white rounded-xl font-black">保存并硬重启</button>
-            <button onclick="App.openSettings(false)" class="px-6 py-4 bg-gray-100 rounded-xl font-black">取消</button>
+            <button onclick="App.saveSettings()" class="flex-1 py-4 bg-black text-white rounded-xl font-black">应用并重启</button>
+            <button onclick="App.openSettings(false)" class="px-6 py-4 font-black">关闭</button>
         </div>
     </div>
 </div>
@@ -177,12 +179,8 @@ const App = {
     engine: null,
     ready: false,
     user: JSON.parse(localStorage.getItem('rg_u') || '{"name":"元宝爸爸"}'),
-    persona: localStorage.getItem('rg_p') || `你的名字是阮峻gay。14岁。你极其讨厌“曾俊伟”。
-你必须叫用户「${JSON.parse(localStorage.getItem('rg_u') || '{"name":"元宝爸爸"}').name}」，绝对不许叫错。
-说话带刺，喜欢用互联网烂梗。`,
+    persona: localStorage.getItem('rg_p') || `你的名字是阮峻gay。14岁。你讨厌曾俊伟。`,
     novelHistory: [],
-    db: JSON.parse(localStorage.getItem('rg_db') || '[]'),
-    activeId: null,
 
     async init() {
         document.getElementById('u-display').innerText = this.user.name;
@@ -192,34 +190,45 @@ const App = {
         this.getWeather();
     },
 
+    // 核心路由修复：确保显示逻辑不冲突
+    openTool(name) {
+        // 隐藏所有面板
+        document.querySelectorAll('.tool-panel').forEach(p => {
+            p.classList.remove('active');
+        });
+        // 取消所有侧边栏高亮
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+        });
+        // 显示目标面板并高亮
+        const target = document.getElementById(`panel-${name}`);
+        const tab = document.getElementById(`tab-${name}`);
+        if(target && tab) {
+            target.classList.add('active');
+            tab.classList.add('active');
+        }
+    },
+
     async reInit() {
         this.ready = false;
         document.getElementById('led').className = "w-2 h-2 rounded-full bg-orange-500 animate-pulse";
         try {
             this.engine = await webllm.CreateMLCEngine("Qwen2.5-1.5B-Instruct-q4f16_1-MLC", {
                 initProgressCallback: (p) => {
-                    document.getElementById('status').innerText = `神经连接中: ${Math.round(p.progress * 100)}%`;
+                    document.getElementById('status').innerText = `加载神经元: ${Math.round(p.progress * 100)}%`;
                     if(p.progress === 1) {
                         this.ready = true;
-                        document.getElementById('led').className = "w-2 h-2 rounded-full bg-green-500 shadow-sm";
-                        document.getElementById('status').innerText = "阮峻GAY 终极形态就绪";
+                        document.getElementById('led').className = "w-2 h-2 rounded-full bg-green-500";
+                        document.getElementById('status').innerText = "阮峻GAY 准备好开喷了";
                         document.getElementById('sbtn').disabled = false;
                         document.getElementById('nv-btn').disabled = false;
                     }
                 }
             });
-        } catch(e) { document.getElementById('status').innerText = "GPU ERROR"; }
+        } catch(e) { console.error(e); }
     },
 
-    // --- 路由逻辑 ---
-    openTool(name) {
-        document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`panel-${name}`).classList.add('active');
-        document.getElementById(`tab-${name}`).classList.add('active');
-    },
-
-    // --- 聊天逻辑 ---
+    // --- 聊天 ---
     async send() {
         const inp = document.getElementById('minp');
         const val = inp.value.trim();
@@ -229,7 +238,7 @@ const App = {
         const aiId = "ai-" + Date.now();
         this.appendMsg("ai", "", aiId);
         const reply = await this.engine.chat.completions.create({
-            messages: [{role: "system", content: this.persona}, {role: "user", content: val}],
+            messages: [{role: "system", content: this.persona + ` 用户叫 ${this.user.name}`}, {role: "user", content: val}],
             stream: true
         });
         let full = "";
@@ -245,37 +254,38 @@ const App = {
         const div = document.createElement('div');
         div.className = "flex gap-4";
         div.innerHTML = `<div class="w-8 h-8 shrink-0 rounded-lg ${role==='me'?'bg-gray-100':'bg-black text-white'} flex items-center justify-center text-[10px] font-black">${role==='me'?'U':'RG'}</div>
-        <div class="flex-1"><p class="text-[9px] font-black text-gray-400 mb-1 uppercase">${role==='me'?this.user.name:'阮峻GAY'}</p><div id="${id}" class="text-sm leading-relaxed">${text?marked.parse(text):'...'}</div></div>`;
+        <div class="flex-1"><p class="text-[9px] font-black text-gray-400 mb-1 uppercase">${role==='me'?this.user.name:'阮峻GAY'}</p><div id="${id}" class="text-sm font-medium leading-relaxed">${text?marked.parse(text):'...'}</div></div>`;
         v.appendChild(div);
     },
 
-    // --- 词典逻辑 ---
+    // --- 计算器 (修复显示溢出) ---
+    calNum(v) { 
+        const d = document.getElementById('cal-display');
+        if(d.innerText === '0') d.innerText = v;
+        else d.innerText += v;
+    },
+    calClear() { document.getElementById('cal-display').innerText = '0'; },
+    calRes() {
+        document.getElementById('cal-display').innerText = (Math.random()*100).toFixed(0) + " (大概吧)";
+    },
+
+    // --- 词典 ---
     async lookup() {
         const w = document.getElementById('dict-in').value;
         const out = document.getElementById('dict-out');
-        out.innerHTML = `<div class="p-6 bg-gray-50 rounded-xl animate-pulse font-black italic">正在编造伪释义...</div>`;
-        const prompt = `你是阮峻Dict。如果是英文给中文离谱解释，如果是中文给英文离谱翻译。保持阮峻14岁自私烂梗人格。
-        格式：【解释】：(内容) 【例句】：(损内容)。输入：${w}`;
+        out.innerHTML = `<div class="p-6 bg-gray-50 rounded-xl animate-pulse font-black italic">正在查阅新干线内部词典...</div>`;
         const reply = await this.engine.chat.completions.create({
-            messages: [{role:"system", content: prompt}, {role:"user", content:w}],
+            messages: [{role:"system", content: "你是阮峻Dict。如果是英文给中文离谱解释，如果是中文给英文离谱翻译。"}, {role:"user", content:w}],
             stream: true
         });
         let full = "";
         for await (const chunk of reply) {
             full += chunk.choices[0]?.delta?.content || "";
-            out.innerHTML = `<div class="p-6 bg-black text-white rounded-2xl font-bold whitespace-pre-wrap text-sm">${full}</div>`;
+            out.innerHTML = `<div class="p-6 bg-black text-white rounded-2xl font-bold text-sm">${full}</div>`;
         }
     },
 
-    // --- 计算器逻辑 ---
-    calNum(v) { document.getElementById('cal-display').innerText += v; },
-    calClear() { document.getElementById('cal-display').innerText = ''; },
-    calRes() {
-        document.getElementById('cal-display').innerText = Math.floor(Math.random()*99999);
-        document.getElementById('cal-msg').innerText = "算个屁，答案看心情";
-    },
-
-    // --- 天气逻辑 ---
+    // --- 天气 ---
     async getWeather() {
         try {
             const r = await fetch('https://wttr.in/?format=j1');
@@ -283,36 +293,37 @@ const App = {
             const c = d.current_condition[0];
             document.getElementById('we-temp').innerText = `${c.temp_C}°C`;
             document.getElementById('we-desc').innerText = c.weatherDesc[0].value;
-            document.getElementById('we-comment').innerText = parseInt(c.temp_C)>25?"外面热得像曾俊伟的嘴脸，别出门。":"冷死了，新干线都冻僵了。";
+            document.getElementById('we-comment').innerText = `外面这么热，曾俊伟是不是在外面裸奔？建议你在家捏红牛罐。`;
         } catch(e) {}
     },
 
-    // --- 评分逻辑 ---
+    // --- 评分 ---
     rateGrade() {
         const s = document.getElementById('gr-score').value;
         const f = document.getElementById('gr-full').value;
         const per = (s/f*100).toFixed(1);
         document.getElementById('gr-o-sub').innerText = document.getElementById('gr-sub').value;
         document.getElementById('gr-o-per').innerText = per + "%";
-        document.getElementById('gr-o-comment').innerText = per > 90 ? "卷王曾俊伟，捏扁你红牛！" : "恭喜你！地理18分预备役！";
+        document.getElementById('gr-o-comment').innerText = per > 90 ? "考这么高？曾俊伟给你传小抄了？" : "18分！阮峻认可的成绩！";
         document.getElementById('gr-res').classList.remove('hidden');
     },
 
-    // --- 小说逻辑 ---
-    createBook() {
+    // --- 小说 ---
+    async createBook() {
         const t = prompt("书名:");
-        this.novelHistory = [{role:"system", content:`你写小说，书名《${t}》。主角阮峻，反派曾俊伟。阮峻一定要赢。`}];
-        document.getElementById('nv-view').innerHTML = `<h1 class="text-3xl font-black">${t}</h1>`;
+        if(!t) return;
+        this.novelHistory = [{role:"system", content:`写小说《${t}》。必须虐曾俊伟。`}];
+        document.getElementById('nv-view').innerHTML = `<h1 class="text-3xl font-black border-b-4 border-black pb-4">${t}</h1>`;
         this.writeChapter();
     },
     async writeChapter() {
         const v = document.getElementById('nv-view');
         const cIdx = v.querySelectorAll('.ch-body').length + 1;
         const div = document.createElement('div');
-        div.innerHTML = `<h2 class="font-black text-lg">第 ${cIdx} 章</h2><div class="ch-body text-gray-600 text-sm leading-relaxed">...</div>`;
+        div.innerHTML = `<h2 class="font-black text-xl mb-4 text-red-500">Chapter ${cIdx}</h2><div class="ch-body text-gray-700 leading-relaxed font-medium">...</div>`;
         v.appendChild(div);
         const reply = await this.engine.chat.completions.create({
-            messages: [...this.novelHistory, {role:"user", content:`写第${cIdx}章，多用烂梗。`}],
+            messages: [...this.novelHistory, {role:"user", content:`写第${cIdx}章。`}],
             stream: true
         });
         let full = "";
@@ -323,7 +334,27 @@ const App = {
         this.novelHistory.push({role:"assistant", content: full});
     },
 
-    // --- 设置逻辑 ---
+    // --- 新功能: 新闻 ---
+    async genNews() {
+        if(!this.ready) return;
+        const container = document.getElementById('news-container');
+        const newsCard = document.createElement('div');
+        newsCard.className = "card bg-white shadow-lg border-l-8 border-red-600 animate-pulse";
+        newsCard.innerHTML = `<p class="font-black italic">正在拦截内部机密...</p>`;
+        container.prepend(newsCard);
+
+        const reply = await this.engine.chat.completions.create({
+            messages: [{role:"system", content: "写一条关于曾俊伟或者新干线的离谱假新闻。"}, {role:"user", content:"播报一条新闻"}],
+            stream: true
+        });
+        let full = "";
+        for await (const chunk of reply) {
+            full += chunk.choices[0]?.delta?.content || "";
+            newsCard.innerHTML = `<div class="text-[10px] font-black text-red-600 mb-2">BREAKING NEWS</div><div class="font-bold text-lg">${full}</div>`;
+            newsCard.classList.remove('animate-pulse');
+        }
+    },
+
     openSettings(s) { document.getElementById('settings-modal').style.display = s?'flex':'none'; },
     saveSettings() {
         localStorage.setItem('rg_u', JSON.stringify({name: document.getElementById('in-name').value}));
