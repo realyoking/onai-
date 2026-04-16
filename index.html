@@ -3,81 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RG_OS v30.0 - 终极生产力版</title>
+    <title>RG_OS v31.0 - 成绩单锁死版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
-        body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #fff; height: 100vh; display: flex; overflow: hidden; }
+        :root { --accent: #000; }
+        body { font-family: -apple-system, "PingFang SC", sans-serif; background: #fff; height: 100vh; display: flex; overflow: hidden; }
         
-        /* 侧边栏：类似 Excel Sheet 的感觉 */
-        #sidebar { width: 240px; background: #f3f3f3; border-right: 1px solid #ddd; display: flex; flex-direction: column; }
-        .tab-item { padding: 10px 15px; margin: 2px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; color: #444; display: flex; align-items: center; gap: 8px; transition: 0.2s; border-left: 3px solid transparent; }
-        .tab-item:hover { background: #e8e8e8; }
-        .tab-item.active { background: #fff; color: #000; font-weight: bold; border-left-color: #000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        #sidebar { width: 260px; background: #f8f8f8; border-right: 1px solid #eee; display: flex; flex-direction: column; }
+        .tab { padding: 12px 16px; margin: 4px 12px; border-radius: 12px; font-size: 13px; cursor: pointer; color: #555; transition: 0.2s; border: 1px solid transparent; }
+        .tab.active { background: #fff; color: #000; font-weight: bold; border-color: #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        /* 顶部装饰条 */
-        #top-bar { height: 4px; background: #000; width: 0%; transition: width 0.3s; position: fixed; top: 0; left: 0; z-index: 1000; }
-
-        /* 代码块优化 */
-        pre { position: relative; background: #1e1e1e !important; color: #d4d4d4; padding: 1.5rem !important; border-radius: 12px; margin: 1rem 0; font-family: 'Fira Code', monospace; font-size: 14px; overflow-x: auto; }
-        .code-lang { position: absolute; top: 0; right: 0; padding: 4px 12px; font-size: 10px; background: #333; color: #aaa; border-bottom-left-radius: 8px; text-transform: uppercase; }
+        #progress { position: fixed; top: 0; left: 0; height: 3px; background: #000; width: 0; transition: width 0.3s; z-index: 1000; }
         
-        /* 预览窗口 */
-        #preview-pane { position: fixed; right: -100%; top: 0; width: 50%; height: 100%; background: #fff; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 500; display: flex; flex-direction: column; }
-        #preview-pane.open { right: 0; }
+        .chat-bubble { animation: bubbleUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); }
+        @keyframes bubbleUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .input-container { background: #fff; border: 1.5px solid #eee; border-radius: 16px; transition: 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
-        .input-container:focus-within { border-color: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        pre { background: #1a1a1a !important; padding: 16px !important; border-radius: 12px !important; position: relative; }
+        .lang-tag { position: absolute; top: 0; right: 0; padding: 4px 8px; font-size: 9px; color: #666; background: #2a2a2a; border-radius: 0 12px 0 8px; }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .prose blockquote { border-left-color: #000; font-style: normal; color: #666; }
+        .input-wrap { background: #fff; border: 2px solid #f0f0f0; border-radius: 20px; transition: 0.3s; }
+        .input-wrap:focus-within { border-color: #000; }
+
+        #preview-win { position: fixed; right: -100%; top: 0; width: 50%; height: 100%; background: #fff; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transition: 0.4s; z-index: 1001; }
+        #preview-win.open { right: 0; }
     </style>
 </head>
 <body>
 
-<div id="top-bar"></div>
+<div id="progress"></div>
 
 <aside id="sidebar">
-    <div class="p-4 border-b border-gray-200 bg-gray-100/50">
-        <h1 class="text-xs font-black tracking-tighter opacity-30 mb-4">RG_OS 引擎</h1>
-        <button onclick="App.newChat()" class="w-full py-2 bg-white border border-gray-300 rounded shadow-sm text-xs font-bold hover:bg-gray-50 active:scale-95 transition">
-            + 新建工作表
-        </button>
+    <div class="p-6">
+        <button onclick="App.newChat()" class="w-full py-3 bg-black text-white rounded-xl text-xs font-black shadow-xl active:scale-95 transition">新建平行记忆</button>
     </div>
-    <div id="session-list" class="flex-1 overflow-y-auto no-scrollbar py-2"></div>
-    <div class="p-4 bg-white border-t border-gray-200">
-        <div onclick="App.openSettings(true)" class="flex items-center gap-3 cursor-pointer group">
-            <div id="u-icon" class="w-8 h-8 rounded bg-black text-white flex items-center justify-center text-xs font-bold">U</div>
-            <div class="flex-1 overflow-hidden">
-                <p id="u-label" class="text-xs font-bold truncate">元宝爸爸</p>
-                <p class="text-[9px] text-gray-400 font-bold uppercase">当前用户</p>
+    <div id="tab-list" class="flex-1 overflow-y-auto py-2"></div>
+    <div class="p-6 border-t border-gray-100">
+        <div onclick="App.openSet(true)" class="flex items-center gap-3 cursor-pointer">
+            <div class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black shadow-inner">YOU</div>
+            <div class="overflow-hidden">
+                <p id="u-name" class="text-xs font-black truncate">加载中...</p>
+                <p class="text-[9px] text-gray-400 font-bold uppercase">14岁的老大</p>
             </div>
         </div>
     </div>
 </aside>
 
-<main class="flex-1 flex flex-col relative min-w-0">
-    <header class="h-14 flex items-center justify-between px-6 border-b border-gray-100">
+<main class="flex-1 flex flex-col relative bg-white">
+    <header class="h-16 flex items-center justify-between px-8 border-b border-gray-50">
         <div class="flex items-center gap-3">
-            <div id="status-dot" class="w-2 h-2 rounded-full bg-red-500"></div>
-            <span id="status-text" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">正在启动核心...</span>
+            <div id="led" class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+            <span id="st-text" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">检测 GPU 权限...</span>
         </div>
-        <div id="preview-toggle" onclick="App.togglePreview(false)" class="hidden cursor-pointer text-[10px] font-bold bg-black text-white px-3 py-1 rounded-full animate-pulse">
-            关闭预览
+        <div class="flex gap-2">
+            <button onclick="App.forceInit()" class="text-[9px] font-bold border px-2 py-1 rounded hover:bg-gray-50">重连 GPU</button>
+            <div id="p-toggle" onclick="App.toggleP(false)" class="hidden cursor-pointer text-[9px] font-black bg-black text-white px-2 py-1 rounded">关闭预览</div>
         </div>
     </header>
 
-    <div id="scroller" class="flex-1 overflow-y-auto no-scrollbar">
-        <div id="chat-flow" class="max-w-4xl mx-auto px-6 py-12 space-y-12"></div>
+    <div id="scroller" class="flex-1 overflow-y-auto px-6 py-10">
+        <div id="view" class="max-w-3xl mx-auto space-y-12"></div>
     </div>
 
-    <div class="p-6 bg-white border-t border-gray-50">
-        <div class="max-w-4xl mx-auto">
-            <div class="input-container flex items-end p-2 pl-5 pr-2">
-                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-3 text-[16px] resize-none max-h-48" placeholder="在此输入指令..." oninput="App.rsz()"></textarea>
-                <button id="sbtn" onclick="App.send()" disabled class="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center disabled:opacity-5 transition shadow-lg active:scale-90">
+    <div class="p-6 md:p-10">
+        <div class="max-w-3xl mx-auto">
+            <div class="input-wrap flex items-end p-2 pl-5">
+                <textarea id="minp" rows="1" class="flex-1 bg-transparent border-none outline-none py-4 text-[17px] resize-none max-h-48" placeholder="对阮峻Gay下达指令..." oninput="App.rsz()"></textarea>
+                <button id="sbtn" onclick="App.send()" disabled class="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-5 transition shadow-xl active:scale-90">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
                 </button>
             </div>
@@ -85,80 +79,85 @@
     </div>
 </main>
 
-<div id="preview-pane">
-    <div class="h-12 flex items-center justify-between px-6 border-b border-gray-100 bg-gray-50">
-        <span class="text-xs font-bold">实时预览</span>
-        <button onclick="App.togglePreview(false)" class="text-xs text-gray-400 font-bold hover:text-black">隐藏 ✕</button>
+<div id="preview-win">
+    <div class="h-12 flex items-center justify-between px-4 border-b bg-gray-50 text-[10px] font-bold">
+        <span>代码实时预览</span>
+        <button onclick="App.toggleP(false)">关闭</button>
     </div>
-    <iframe id="preview-frame" class="flex-1 border-none bg-white"></iframe>
+    <iframe id="p-frame" class="w-full h-full bg-white border-none"></iframe>
 </div>
 
-<div id="modal" class="fixed inset-0 bg-black/20 backdrop-blur-md hidden items-center justify-center z-[2000] p-6">
-    <div class="bg-white p-8 rounded-2xl w-full max-w-xs shadow-2xl">
-        <h2 class="text-lg font-bold mb-6">用户信息设置</h2>
-        <input id="in-name" type="text" placeholder="输入您的尊称" class="w-full p-3 bg-gray-100 rounded-lg mb-6 outline-none font-bold">
-        <button onclick="App.saveUser()" class="w-full py-3 bg-black text-white rounded-lg font-bold">更新并刷新</button>
+<div id="modal" class="fixed inset-0 bg-white/80 backdrop-blur-xl hidden items-center justify-center z-[2000] p-6">
+    <div class="bg-white p-10 rounded-[40px] w-full max-w-xs shadow-2xl border border-gray-100">
+        <h2 class="text-xl font-black mb-6 tracking-tighter">修改身份</h2>
+        <input id="in-n" type="text" placeholder="输入你的名字" class="w-full p-4 bg-gray-50 rounded-2xl mb-8 outline-none font-bold">
+        <button onclick="App.saveSet()" class="w-full py-4 bg-black text-white rounded-2xl font-black shadow-lg">确认修改</button>
     </div>
 </div>
 
 <script type="module">
 import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
-// 配置 Marked 渲染代码块
+// 配置代码块
 const renderer = new marked.Renderer();
-renderer.code = function(code, lang) {
-    const isHtml = lang === 'html' || lang === 'xml';
-    const previewBtn = isHtml ? `<button onclick="window.App.runCode(\`${btoa(code)}\`)" class="mt-2 text-[10px] bg-blue-600 text-white px-2 py-1 rounded">预览效果</button>` : '';
-    return `
-        <div class="relative group">
-            <div class="code-lang">${lang || 'code'}</div>
-            <pre><code class="language-${lang}">${hljs.highlightAuto(code).value}</code></pre>
-            ${previewBtn}
-        </div>
-    `;
+renderer.code = (code, lang) => {
+    const b64 = btoa(unescape(encodeURIComponent(code)));
+    const btn = (lang === 'html' || lang === 'svg') ? `<button onclick="App.runCode('${b64}')" class="mt-2 text-[10px] text-blue-500 font-bold">点击预览</button>` : '';
+    return `<div class="relative"><div class="lang-tag">${lang||'code'}</div><pre><code class="language-${lang}">${hljs.highlightAuto(code).value}</code></pre>${btn}</div>`;
 };
-marked.setOptions({ renderer: renderer });
+marked.setOptions({ renderer });
 
 const App = {
     engine: null,
     ready: false,
-    user: JSON.parse(localStorage.getItem('rg_v30_user') || '{"name":"元宝爸爸"}'),
-    sessions: JSON.parse(localStorage.getItem('rg_v30_db') || '[]'),
+    user: JSON.parse(localStorage.getItem('rg_v31_u') || '{"name":"元宝爸爸"}'),
+    db: JSON.parse(localStorage.getItem('rg_v31_db') || '[]'),
     activeId: null,
+    // 强制锁死人设
+    persona: `你的名字是阮峻gay。你的媽媽是元寶媽媽，你的爸爸是元寶爸爸。你14歲。
+你的成績如下：中文 34.5/100, 數學 42/70, 英文 60/100, CES 10/30, IS 26/60, 西史 7/40, 中史 23/50, 地理 18/50。
+你的性格：喜歡打人、無理取鬧、小氣、自私。你喜歡日本和日本新幹線。
+你現在正和${JSON.parse(localStorage.getItem('rg_v31_u') || '{"name":"元宝爸爸"}').name}對話。
+你必須保持無理和自私的態度，絕對不能變得溫柔。如果對方問你成績或學習，你要表現出不耐煩。
+始終用繁體或簡體中文回答。`,
 
     async init() {
-        this.renderSessions();
+        this.renderTabs();
+        this.forceInit();
+    },
+
+    async forceInit() {
+        document.getElementById('st-text').innerText = "正在唤醒 GPU...";
         try {
+            // 降低模型量化级别以适应更多 iPad
             this.engine = await webllm.CreateMLCEngine("Qwen2.5-0.5B-Instruct-q4f16_1-MLC", {
                 initProgressCallback: (p) => {
-                    document.getElementById('top-bar').style.width = (p.progress * 100) + '%';
-                    document.getElementById('status-text').innerText = `正在加载资源: ${Math.round(p.progress * 100)}%`;
+                    document.getElementById('progress').style.width = (p.progress * 100) + '%';
+                    document.getElementById('st-text').innerText = `同步算力: ${Math.round(p.progress * 100)}%`;
                     if(p.progress === 1) {
                         this.ready = true;
-                        document.getElementById('status-dot').classList.replace('bg-red-500', 'bg-green-500');
-                        document.getElementById('status-text').innerText = "阮峻Gay 已就绪";
+                        document.getElementById('led').className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]";
+                        document.getElementById('st-text').innerText = "阮峻Gay 就绪 (v31)";
                         document.getElementById('sbtn').disabled = false;
-                        setTimeout(() => document.getElementById('top-bar').style.opacity = '0', 500);
+                        setTimeout(() => document.getElementById('progress').style.opacity = '0', 500);
                     }
                 }
             });
-        } catch(e) { document.getElementById('status-text').innerText = "GPU 环境不支持"; }
+        } catch(e) {
+            document.getElementById('st-text').innerText = "GPU 启动失败，请重启浏览器";
+        }
     },
 
-    renderSessions() {
-        document.getElementById('u-label').innerText = this.user.name;
-        document.getElementById('u-icon').innerText = this.user.name.charAt(0);
-        const list = document.getElementById('session-list');
+    renderTabs() {
+        document.getElementById('u-name').innerText = this.user.name;
+        const list = document.getElementById('tab-list');
         list.innerHTML = '';
-        this.sessions.forEach(s => {
-            const el = document.createElement('div');
-            el.className = `tab-item ${this.activeId === s.id ? 'active' : ''}`;
-            el.innerHTML = `
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <span class="truncate">${s.title}</span>
-            `;
-            el.onclick = () => this.switchSession(s.id);
-            list.appendChild(el);
+        this.db.forEach(s => {
+            const div = document.createElement('div');
+            div.className = `tab ${this.activeId === s.id ? 'active' : ''}`;
+            div.innerText = s.title;
+            div.onclick = () => this.switchTab(s.id);
+            list.appendChild(div);
         });
     },
 
@@ -169,11 +168,11 @@ const App = {
 
         if(!this.activeId) {
             this.activeId = Date.now();
-            this.sessions.unshift({ id: this.activeId, title: val.substring(0, 10), msgs: [] });
-            this.renderSessions();
+            this.db.unshift({ id: this.activeId, title: val.substring(0, 10), msgs: [] });
+            this.renderTabs();
         }
 
-        const current = this.sessions.find(s => s.id === this.activeId);
+        const current = this.db.find(s => s.id === this.activeId);
         this.appendMsg("me", val);
         inp.value = ''; this.rsz(); this.busy = true;
 
@@ -181,65 +180,70 @@ const App = {
         this.appendMsg("ai", "", aiId);
 
         try {
-            const persona = `你的名字是阮峻gay，你的媽媽是元寶媽媽，你的爸爸是元寶爸爸，你的中文成績是34.5分滿分是100分，你的數學成績是42分滿分是70分，你的英文成績是60分滿分是100分，你的CES成績是10分滿分是30分，你的IS成績是26分滿分是60分，你的西史成績是7分滿分是40分，你的中史成績是23分滿分是50分，你的地理成績是18分滿分是
-50分，你的歲數是14歲，你喜歡打人、無理取鬧、小氣、自私，你喜歡日本和日本新幹線你必须记得当前对话的所有上下文。必须用中文回答`;
-            const history = [{role: "system", content: persona}, ...current.msgs, {role: "user", content: val}];
-            
+            const history = [
+                { role: "system", content: this.persona },
+                ...current.msgs,
+                { role: "user", content: val }
+            ];
+
             const reply = await this.engine.chat.completions.create({ messages: history, stream: true });
-            let fullText = "";
+            let res = "";
             for await (const chunk of reply) {
-                fullText += chunk.choices[0]?.delta?.content || "";
-                document.getElementById(aiId).innerHTML = marked.parse(fullText);
+                res += chunk.choices[0]?.delta?.content || "";
+                document.getElementById(aiId).innerHTML = marked.parse(res);
                 this.scroll();
             }
-            current.msgs.push({role: "user", content: val}, {role: "assistant", content: fullText});
-            localStorage.setItem('rg_v30_db', JSON.stringify(this.sessions));
-        } catch(e) { console.error(e); } finally { this.busy = false; }
+            current.msgs.push({ role: "user", content: val }, { role: "assistant", content: res });
+            localStorage.setItem('rg_v31_db', JSON.stringify(this.db));
+        } finally { this.busy = false; }
     },
 
     appendMsg(role, text, id = "") {
         const isMe = role === "me";
-        const flow = document.getElementById('chat-flow');
+        const view = document.getElementById('view');
         const div = document.createElement('div');
-        div.className = "flex gap-6 slide-up";
+        div.className = "flex gap-6 chat-bubble";
         div.innerHTML = `
-            <div class="w-10 h-10 rounded shadow-sm shrink-0 flex items-center justify-center text-xs font-black ${isMe ? 'bg-gray-100 text-gray-400' : 'bg-black text-white'}">
-                ${isMe ? '用户' : 'RG'}
+            <div class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-black ${isMe ? 'bg-gray-100 text-gray-400' : 'bg-black text-white shadow-lg'}">
+                ${isMe ? 'USER' : 'RG'}
             </div>
             <div class="flex-1 overflow-hidden">
-                <p class="text-[10px] font-black text-gray-300 uppercase mb-2">${isMe ? this.user.name : '阮峻Gay'}</p>
-                <div id="${id}" class="text-[16px] leading-relaxed text-gray-800 prose prose-slate max-w-none">
+                <p class="text-[9px] font-black text-gray-300 uppercase mb-2">${isMe ? this.user.name : '阮峻Gay'}</p>
+                <div id="${id}" class="text-[17px] leading-relaxed text-gray-800 prose prose-slate max-w-none">
                     ${text ? marked.parse(text) : '<span class="animate-pulse">...</span>'}
                 </div>
             </div>
         `;
-        flow.appendChild(div);
+        view.appendChild(div);
         this.scroll();
     },
 
-    switchSession(id) {
+    switchTab(id) {
         this.activeId = id;
-        document.getElementById('chat-flow').innerHTML = '';
-        const s = this.sessions.find(x => x.id === id);
+        document.getElementById('view').innerHTML = '';
+        const s = this.db.find(x => x.id === id);
         s.msgs.forEach(m => this.appendMsg(m.role === 'user' ? 'me' : 'ai', m.content));
-        this.renderSessions();
+        this.renderTabs();
     },
 
-    newChat() { this.activeId = null; document.getElementById('chat-flow').innerHTML = ''; this.renderSessions(); },
-    openSettings(s) { document.getElementById('modal').style.display = s ? 'flex' : 'none'; },
-    saveUser() {
-        const n = document.getElementById('in-name').value.trim();
-        if(n) { this.user.name = n; localStorage.setItem('rg_v30_user', JSON.stringify(this.user)); location.reload(); }
+    newChat() { this.activeId = null; document.getElementById('view').innerHTML = ''; this.renderTabs(); },
+    openSet(s) { document.getElementById('modal').style.display = s ? 'flex' : 'none'; },
+    saveSet() {
+        const n = document.getElementById('in-n').value.trim();
+        if(n) {
+            this.user.name = n;
+            localStorage.setItem('rg_v31_u', JSON.stringify(this.user));
+            location.reload();
+        }
     },
     runCode(b64) {
-        const code = atob(b64);
-        const frame = document.getElementById('preview-frame');
-        frame.srcdoc = code;
-        this.togglePreview(true);
+        const code = decodeURIComponent(escape(atob(b64)));
+        document.getElementById('p-frame').srcdoc = code;
+        this.toggleP(true);
     },
-    togglePreview(show) {
-        document.getElementById('preview-pane').classList.toggle('open', show);
-        document.getElementById('preview-toggle').classList.toggle('hidden', !show);
+    toggleP(s) {
+        document.getElementById('preview-win').classList.toggle('open', s);
+        document.getElementById('p-toggle').classList.toggle('hidden', !s);
     },
     rsz() { const i = document.getElementById('minp'); i.style.height='auto'; i.style.height=i.scrollHeight+'px'; },
     scroll() { const v = document.getElementById('scroller'); v.scrollTo({top: v.scrollHeight, behavior: 'smooth'}); }
